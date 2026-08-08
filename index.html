@@ -32,6 +32,7 @@ button{font-family:inherit;color:inherit;cursor:pointer}
 .ttl small{display:block;font-family:"IBM Plex Sans",sans-serif;font-weight:400;font-size:12px;color:var(--mut);letter-spacing:0;margin-top:2px}
 .clock{font-family:"IBM Plex Mono",monospace;font-weight:600;font-size:22px;font-variant-numeric:tabular-nums;color:var(--ok)}
 .clock.off{color:var(--dim)}
+.clock.pause{color:var(--warn)}
 
 .nav{position:fixed;bottom:0;left:0;right:0;z-index:30;background:var(--surf);border-top:1px solid var(--line);display:flex;padding-bottom:env(safe-area-inset-bottom)}
 .nav button{flex:1;background:none;border:0;padding:11px 2px 12px;font-family:"Barlow Condensed",sans-serif;font-weight:600;font-size:13.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--dim);border-top:2px solid transparent;margin-top:-1px}
@@ -614,18 +615,18 @@ function techHtml(m,id){
   return h;
 }
 
-/* Максимальный разрыв, который засчитывается как отдых между подходами.
-   Всё, что дольше (приложение было закрыто), во время тренировки не идёт. */
-var GAP_CAP=10*60*1000;
+/* Предохранитель на случай подвисания таймера при активном экране */
+var TICK_CAP=90*1000;
 var accSaveAt=0;
 
-/* Досчитывает активное время с момента последнего «пульса» */
+/* Время идёт только пока приложение открыто на экране и не на ручной паузе */
 function bumpElapsed(){
   if(!S.active)return 0;
   if(S.active.acc===undefined)S.active.acc=0;
-  if(!S.active.seen)S.active.seen=Date.now();
-  var now=Date.now(),gap=now-S.active.seen;
-  if(gap>0)S.active.acc+=Math.min(gap,GAP_CAP);
+  var now=Date.now();
+  if(S.active.paused||document.hidden||!S.active.seen){S.active.seen=now;return S.active.acc;}
+  var gap=now-S.active.seen;
+  if(gap>0&&gap<TICK_CAP)S.active.acc+=gap;
   S.active.seen=now;
   return S.active.acc;
 }
@@ -636,11 +637,11 @@ function flushElapsed(){
 function setClock(on){
   var c=document.getElementById('clock');
   clearInterval(tick);tick=null;
-  if(!on||!S.active){c.textContent='--:--';c.classList.add('off');return;}
-  c.classList.remove('off');
+  if(!on||!S.active){c.textContent='--:--';c.className='clock off mono';return;}
   function up(){
     var ms=bumpElapsed();
-    c.textContent=hhmm(ms);
+    c.textContent=hhmm(ms)+(S.active.paused?' ❚❚':'');
+    c.className='clock mono'+(S.active.paused?' pause':'');
     if(Date.now()-accSaveAt>10000){save();accSaveAt=Date.now();}
   }
   up();tick=setInterval(up,1000);
@@ -732,8 +733,16 @@ window.addEventListener('beforeunload',flushElapsed);
 window.addEventListener('pagehide',flushElapsed);
 document.addEventListener('visibilitychange',function(){
   if(!S.active)return;
-  if(document.hidden){flushElapsed();}
-  else{S.active.seen=Date.now()-Math.min(GAP_CAP,Date.now()-(S.active.seen||Date.now()));setClock(true);}
+  if(document.hidden){bumpElapsed();save();accSaveAt=Date.now();}
+  else{S.active.seen=Date.now();accSaveAt=Date.now();setClock(true);}
+});
+document.getElementById('clock').addEventListener('click',function(){
+  if(!S.active)return;
+  bumpElapsed();
+  S.active.paused=!S.active.paused;
+  S.active.seen=Date.now();
+  save();setClock(true);
+  toast(S.active.paused?'Таймер на паузе':'Таймер идёт');
 });
 
 function commit(exId,kind,idx,row){
@@ -755,6 +764,7 @@ document.getElementById('mask').addEventListener('click',function(e){if(e.target
 function openFinish(){
   var a=S.active,d=DAYS[a.day];
   var mins=Math.max(1,Math.round(bumpElapsed()/60000));
+  var span=Math.max(1,Math.round((Date.now()-a.s)/60000));
   var lines=[],prs=0;
   d.ex.forEach(function(it){
     var arr=(a.e[it.id]||[]).filter(function(s){return s&&s.d;});
@@ -765,7 +775,7 @@ function openFinish(){
   });
   openModal('<h3>Завершение</h3><p class="sub">'+d.t+' · '+dwd(a.s)+'</p>'+
     '<ul class="done-list">'+lines.join('')+'</ul>'+
-    '<label class="mlab">Длительность, мин<em>Чистое время: пока приложение было открыто. Поправь, если не сходится</em></label>'+
+    '<label class="mlab">Длительность, мин<em>Чистое время с открытым приложением. От начала до конца прошло '+span+' мин — впиши его, если так вернее</em></label>'+
     '<input type="text" inputmode="numeric" class="txt" id="fmins" value="'+mins+'">'+
     '<label class="mlab">Калории<em>С нагрудного пульсометра. Можно оставить пустым</em></label>'+
     '<input type="text" inputmode="numeric" class="txt" id="fkcal" value="">'+
@@ -1185,15 +1195,14 @@ function boot(migrated){
     if(!S.active.w)S.active.w={};
     /* Старые тренировки без накопителя: считаем от даты старта, но не больше 3 часов */
     if(S.active.acc===undefined)S.active.acc=Math.min(3*3600*1000,Date.now()-S.active.s);
-    /* Пауза, пока приложение было закрыто, засчитывается не больше GAP_CAP */
-    if(S.active.seen)S.active.acc+=Math.min(GAP_CAP,Math.max(0,Date.now()-S.active.seen));
+    /* Время, пока приложение было закрыто, не засчитывается вообще */
     S.active.seen=Date.now();
     accSaveAt=Date.now();
   }
   renderWork();
   if(S.active){
     setClock(true);
-    toast('Тренировка восстановлена: '+Math.round(S.active.acc/60000)+' мин');
+    toast('Тренировка восстановлена: '+Math.round(S.active.acc/60000)+' мин'+(S.active.paused?' (пауза)':''));
   }
   else if(migrated&&S.log.length)toast('Данные из прошлой версии перенесены');
 }
