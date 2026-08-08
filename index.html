@@ -5,7 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
 <meta name="theme-color" content="#0F1215">
 <title>Зал</title>
-<link rel="manifest" href='data:application/json,{"name":"Зал","short_name":"Зал","start_url":".","display":"standalone","background_color":"%230F1215","theme_color":"%230F1215","icons":[]}'>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
@@ -615,34 +617,27 @@ function techHtml(m,id){
   return h;
 }
 
-/* Предохранитель на случай подвисания таймера при активном экране */
-var TICK_CAP=90*1000;
 var accSaveAt=0;
 
-/* Время идёт только пока приложение открыто на экране и не на ручной паузе */
+/* Время идёт от начала тренировки. Вычитается только то, что ты сам поставил на паузу. */
 function bumpElapsed(){
   if(!S.active)return 0;
-  if(S.active.acc===undefined)S.active.acc=0;
   var now=Date.now();
-  if(S.active.paused||document.hidden||!S.active.seen){S.active.seen=now;return S.active.acc;}
-  var gap=now-S.active.seen;
-  if(gap>0&&gap<TICK_CAP)S.active.acc+=gap;
-  S.active.seen=now;
-  return S.active.acc;
+  var p=S.active.pAcc||0;
+  if(S.active.pSince)p+=now-S.active.pSince;
+  var ms=(now-S.active.s)-p;
+  return ms>0?ms:0;
 }
-function flushElapsed(){
-  if(!S.active)return;
-  bumpElapsed();save();accSaveAt=Date.now();
-}
+function isPaused(){return !!(S.active&&S.active.pSince);}
+function flushElapsed(){if(S.active){save();accSaveAt=Date.now();}}
 function setClock(on){
   var c=document.getElementById('clock');
   clearInterval(tick);tick=null;
   if(!on||!S.active){c.textContent='--:--';c.className='clock off mono';return;}
   function up(){
-    var ms=bumpElapsed();
-    c.textContent=hhmm(ms)+(S.active.paused?' ❚❚':'');
-    c.className='clock mono'+(S.active.paused?' pause':'');
-    if(Date.now()-accSaveAt>10000){save();accSaveAt=Date.now();}
+    c.textContent=hhmm(bumpElapsed())+(isPaused()?' ❚❚':'');
+    c.className='clock mono'+(isPaused()?' pause':'');
+    if(Date.now()-accSaveAt>15000){save();accSaveAt=Date.now();}
   }
   up();tick=setInterval(up,1000);
 }
@@ -733,16 +728,19 @@ window.addEventListener('beforeunload',flushElapsed);
 window.addEventListener('pagehide',flushElapsed);
 document.addEventListener('visibilitychange',function(){
   if(!S.active)return;
-  if(document.hidden){bumpElapsed();save();accSaveAt=Date.now();}
-  else{S.active.seen=Date.now();accSaveAt=Date.now();setClock(true);}
+  if(document.hidden)flushElapsed();
+  else setClock(true);
 });
 document.getElementById('clock').addEventListener('click',function(){
   if(!S.active)return;
-  bumpElapsed();
-  S.active.paused=!S.active.paused;
-  S.active.seen=Date.now();
+  if(S.active.pSince){
+    S.active.pAcc=(S.active.pAcc||0)+(Date.now()-S.active.pSince);
+    S.active.pSince=null;
+  }else{
+    S.active.pSince=Date.now();
+  }
   save();setClock(true);
-  toast(S.active.paused?'Таймер на паузе':'Таймер идёт');
+  toast(isPaused()?'Пауза. Тапни ещё раз, чтобы продолжить':'Таймер идёт');
 });
 
 function commit(exId,kind,idx,row){
@@ -1193,16 +1191,14 @@ store.get('gym:v2').then(function(d){
 function boot(migrated){
   if(S.active){
     if(!S.active.w)S.active.w={};
-    /* Старые тренировки без накопителя: считаем от даты старта, но не больше 3 часов */
-    if(S.active.acc===undefined)S.active.acc=Math.min(3*3600*1000,Date.now()-S.active.s);
-    /* Время, пока приложение было закрыто, не засчитывается вообще */
-    S.active.seen=Date.now();
+    if(S.active.pAcc===undefined)S.active.pAcc=0;
+    delete S.active.acc;delete S.active.seen;delete S.active.paused;
     accSaveAt=Date.now();
   }
   renderWork();
   if(S.active){
     setClock(true);
-    toast('Тренировка восстановлена: '+Math.round(S.active.acc/60000)+' мин'+(S.active.paused?' (пауза)':''));
+    toast('Тренировка восстановлена: '+Math.round(bumpElapsed()/60000)+' мин'+(isPaused()?' (пауза)':''));
   }
   else if(migrated&&S.log.length)toast('Данные из прошлой версии перенесены');
 }
