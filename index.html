@@ -35,6 +35,17 @@ button{font-family:inherit;color:inherit;cursor:pointer}
 .clock{font-family:"IBM Plex Mono",monospace;font-weight:600;font-size:22px;font-variant-numeric:tabular-nums;color:var(--ok)}
 .clock.off{color:var(--dim)}
 .clock.pause{color:var(--warn)}
+.restbtn{background:var(--surf);border:1px solid var(--line);border-radius:4px;padding:7px 12px;font-family:"Barlow Condensed",sans-serif;font-weight:600;font-size:15px;letter-spacing:.07em;text-transform:uppercase;color:var(--mut);flex:0 0 auto;min-width:78px}
+.restbtn.run{background:var(--dat);border-color:var(--dat);color:#0F1215;font-family:"IBM Plex Mono",monospace;font-weight:600;font-size:16px;letter-spacing:0;padding:7px 10px}
+.restbtn.fire{background:var(--ok);border-color:var(--ok);color:#0F1215}
+.row.timing{background:rgba(217,162,63,.16);box-shadow:inset 0 0 0 1px var(--warn)}
+.chk.timing{background:var(--warn);border-color:var(--warn);color:#0F1215;font-family:"IBM Plex Mono",monospace;font-weight:600;font-size:13px}
+.tips{margin:0 0 18px}
+.tip{background:var(--card);border-left:3px solid var(--line);border-radius:0 4px 4px 0;padding:10px 13px;margin-bottom:7px;font-size:14.5px;line-height:1.45;color:var(--mut)}
+.tip b{color:var(--tx);font-weight:600}
+.tip.todo{border-left-color:var(--warn)}
+.tip.good{border-left-color:var(--ok)}
+.tip.fact{border-left-color:var(--dat)}
 
 .nav{position:fixed;bottom:0;left:0;right:0;z-index:30;background:var(--surf);border-top:1px solid var(--line);display:flex;padding-bottom:env(safe-area-inset-bottom)}
 .nav button{flex:1;background:none;border:0;padding:11px 2px 12px;font-family:"Barlow Condensed",sans-serif;font-weight:600;font-size:13.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--dim);border-top:2px solid transparent;margin-top:-1px}
@@ -202,6 +213,7 @@ textarea.small{height:74px}
 
 <div class="top"><div class="top-in">
   <div class="ttl">Зал<small id="sub">Выбери тренировку</small></div>
+  <button class="restbtn" id="restbtn" hidden>Отдых</button>
   <div class="clock off mono" id="clock">--:--</div>
 </div></div>
 
@@ -352,11 +364,11 @@ h_door:{name:'Грудные в дверном проёме',grp:'Мобильн
  how:['Встань в проём, предплечье к косяку, локоть на уровне плеча, угол 90°.','Небольшой шаг вперёд той же ногой.','Мягко поверни корпус в сторону от руки. 45 сек, потом смена.'],
  watch:['Голова не выдвигается вперёд.','Растяжение по передней поверхности груди, у подмышки.'],
  stop:'Щиплет в переднюю часть плеча — опусти локоть на 10–15 см ниже.'},
-h_ham:{name:'Задняя поверхность бедра лёжа',grp:'Мобильность',noW:1,unit:'сек',repdef:45,repstep:15,rest:'без паузы',
- hint:'Вторая нога согнута, стопа на полу. Поясница прижата.',
- how:['Ляг на спину. Свободная нога согнута, стопа на полу.','Ремень на стопу рабочей ноги, подними её вверх, колено почти прямое.','Подтягивай ногу ремнём до натяжения, не до боли. 45 сек.'],
- watch:['Поясница прижата к полу всё время.','Тянет под коленом и по середине задней поверхности.'],
- stop:'Наклоны к прямым ногам стоя тебе не подходят — только этот вариант.'},
+h_glute:{name:'Фигура 4 лёжа',grp:'Мобильность',noW:1,unit:'сек',repdef:45,repstep:15,
+ hint:'Лодыжка на колене, подтягиваешь бедро к себе. Поясница прижата.',
+ how:['Ляг на спину, колени согнуты, стопы на полу.','Положи лодыжку правой ноги на левое колено — получится «четвёрка».','Просунь руки под левое бедро и подтяни его к груди.','Правым локтем мягко отводи правое колено от себя. 45 сек, потом смена.'],
+ watch:['Тянет в глубине ягодицы и снаружи бедра.','Голова и плечи на полу, не тянись к ногам головой.','Поясница прижата — если отрывается, тяни бедро меньше.'],
+ note:'Грушевидная и ягодичные забиваются от падела и сидячей работы. Их жёсткость тянет таз и грузит поясницу сильнее, чем задняя поверхность бедра.'},
 
 /* --- ДОМ: КОР --- */
 h_deadbug:{name:'Dead bug',grp:'Кор',noW:1,repdef:10,rest:'45 сек',
@@ -403,6 +415,24 @@ h_hammer:{name:'Молотковые сгибания',grp:'Бицепс',start:
  note:'Упражнение на толщину руки. Гнаться за весом смысла нет.'}
 };
 
+/* Время отдыха, сек. Везде взято минимальное значение диапазона. */
+var REST={
+incline_db:120,cable_fly:60,bb_curl:90,pulldown:120,db_ohp:120,leg_press:120,
+tri_oh:90,lat_raise:60,farmer:90,bench:180,pullup:120,incline_curl:90,
+leg_curl:90,rear_delt:60,hanging_leg:60,pallof:45,
+h_hip:0,h_tspine:0,h_book:0,h_door:0,h_glute:0,
+h_deadbug:45,h_birddog:45,h_splank:45,h_bridge:45,h_wheel:90,
+h_pushup:90,h_curl:60,h_hammer:60};
+function restLabel(s){
+  if(!s)return 'без паузы';
+  return (s>=60&&s%60===0)?(s/60)+' мин':s+' сек';
+}
+Object.keys(REST).forEach(function(k){
+  if(!EX[k])return;
+  EX[k].restS=REST[k];
+  EX[k].rest=restLabel(REST[k]);
+});
+
 /* ============ ТРЕНИРОВКИ ============ */
 var DAYS={
 A:{t:'День A',type:'gym',ex:[
@@ -420,7 +450,7 @@ B:{t:'День B',type:'gym',ex:[
 mob:{t:'Мобильность',type:'home',mins:6,ex:[
  {id:'h_hip',sets:2,reps:'60 сек × сторона',rd:60},{id:'h_tspine',sets:3,reps:'20 сек',rd:20},
  {id:'h_book',sets:2,reps:'8 × сторона',rd:8},{id:'h_door',sets:2,reps:'45 сек × сторона',rd:45},
- {id:'h_ham',sets:2,reps:'45 сек × сторона',rd:45}]},
+ {id:'h_glute',sets:2,reps:'45 сек × сторона',rd:45}]},
 core:{t:'Кор и спина',type:'home',mins:7,ex:[
  {id:'h_deadbug',sets:3,reps:'10 × сторона',rd:10},{id:'h_birddog',sets:3,reps:'8 × сторона',rd:8},
  {id:'h_splank',sets:3,reps:'40 сек × сторона',rd:40},{id:'h_bridge',sets:2,reps:'15',rd:15}]},
@@ -445,19 +475,27 @@ var BODY=[
 {k:'k1',n:'Калипер, бок',u:'мм',s:.5,h:'2 см выше подвздошной справа'},
 {k:'k2',n:'Калипер, живот',u:'мм',s:.5,h:'2 см слева от пупка'}];
 
-var LINES=[
-'Две недели без зала — это минус 5% к весам, а не минус мышцы. Возвращайся с тех же цифр.',
-'Рабочий вес растёт от еды не меньше, чем от подходов. 3300 ккал — половина программы.',
-'Один добавленный повтор в трёх подходах — это уже прогресс. Ждать +5 кг не надо.',
-'Ты играешь в падел 6–8 часов в неделю. Зал — это всего 2,5 часа. Найти их проще, чем кажется.',
-'Отбой в 22:30 даст больше, чем любая перестройка программы.',
-'Пропустил день — не «начинай заново». Просто продолжи с тех же весов.',
-'Разминочные не считаются. Считается то, что ты сделал с 1–2 повторами в запасе.',
-'Плохая тренировка лучше пропущенной. Даже наполовину.',
-'Индекс силы растёт медленно и это нормально. Смотри на месяц, не на неделю.',
-'Мобильность 6 минут в день — самая дешёвая страховка для твоей поясницы.',
-'Локоть уехал вперёд — подход закончен. Честные 8 лучше грязных 12.',
-'Если веса стоят три недели подряд — проблема в тарелке, а не в программе.'];
+var FACTS=[
+'Мышцы за две недели без зала практически не теряются. Падает гликоген, вода и рабочие веса на 5–10% — это возвращается за пару тренировок.',
+'Белок сверх 1,8 г на кг не даёт прироста, зато занимает место в желудке. При 82 кг это ~150 г — остальное лучше добрать углеводами.',
+'Один жидкий приём даёт 900 ккал за три минуты: 100 г овсянки, банан, 40 г арахисовой пасты, 500 мл молока, мёд.',
+'Углеводы вокруг падела — не роскошь. Два часа игры опустошают гликоген, и без заправки организм разбирает мышцы, а не строит.',
+'Рост в диапазоне 5–30 повторов примерно одинаков, если подход близок к отказу. Вес важен меньше, чем усилие в последних повторах.',
+'Мышца растёт лучше в растянутой позиции. Поэтому подъём на наклонной эффективнее подъёма стоя, а разгибание из-за головы — эффективнее пушдауна.',
+'Белковый синтез после тренировки держится 24–48 часов. Два раза в неделю на группу лучше, чем один раз двойным объёмом.',
+'Сон меньше 7 часов заметно снижает синтез белка и повышает кортизол. При твоей нагрузке это дороже любого пропущенного подхода.',
+'Креатин моногидрат — единственная добавка с надёжной доказательной базой для набора. 5 г в день, время приёма не важно.',
+'Крепатура не показатель качества тренировки. Она сильнее от новых движений и эксцентрики, а не от эффективности стимула.',
+'Разминочные подходы нужны, чтобы поднять температуру мышцы и отрепетировать траекторию. Утомлять они не должны.',
+'Отдых меньше двух минут в базовых снижает объём в следующем подходе. Экономия времени тут работает против роста.',
+'При протрузиях опасно не движение вообще, а нагруженное сгибание поясницы. Планки, dead bug и Pallof безопаснее любых скручиваний.',
+'Эксцентрическая фаза (опускание) даёт значимую часть стимула. Три секунды вниз стоят дороже, чем плюс пять килограммов.',
+'Набор быстрее 0,25 кг в неделю почти целиком идёт в жир. Медленно — это правильно, а не медленно.',
+'Кофеин за 40 минут до тренировки реально повышает силовые. Но после 14:00 он же крадёт у тебя сон.',
+'Замеры тела информативнее весов: вода и гликоген качают вес на ±1,5 кг за день, а обхваты меняются медленно и честно.',
+'Тренировка на 60% от плана даёт примерно 80% результата. Пропуск даёт ноль. Приходи даже вполсилы.',
+'После падела мышцы уже под эксцентрической нагрузкой. Поэтому ноги в зале урезаны до пяти подходов — это не экономия, а расчёт.',
+'Растяжка перед подходами временно снижает силу. Мобильность лучше делать отдельно, в рабочие перерывы.'];
 
 /* ============ СОСТОЯНИЕ ============ */
 var S={active:null,log:[],body:[],custom:{},setsOv:{},plan:{gym:2,mob:5,core:3,wheel:2,prio:2}};
@@ -501,18 +539,177 @@ function bestEver(exId){
   return b;
 }
 
+/* Сколько сделано на этой неделе по каждому пункту плана */
+function planDone(k,wk){
+  wk=wk||weekKey(Date.now());
+  return S.log.filter(function(x){
+    if(weekKey(x.s)!==wk)return false;
+    if(k==='gym')return (x.type||DAYS[x.day].type)==='gym';
+    return x.day===k;
+  }).length;
+}
+/* Календарных дней с последней тренировки, по датам, а не по часам */
+function daysSince(){
+  if(!S.log.length)return null;
+  var last=S.log[S.log.length-1];
+  var a=new Date(last.s);a.setHours(0,0,0,0);
+  var b=new Date();b.setHours(0,0,0,0);
+  return Math.round((b-a)/864e5);
+}
+function hintsHtml(){
+  var out='<div class="tips">';
+  var wk=weekKey(Date.now());
+  var d=daysSince();
+
+  /* 1. Статус недели */
+  var gd=planDone('gym',wk),gn=S.plan.gym;
+  if(gd>=gn&&gn>0){
+    out+='<div class="tip good"><b>Зал на неделе закрыт: '+gd+' из '+gn+'.</b> Дальше решают еда и сон, а не дополнительные подходы.</div>';
+  }else{
+    var need=gn-gd;
+    var nextDay=(!S.log.filter(function(x){return weekKey(x.s)===wk&&x.day==='A';}).length)?'A':'B';
+    out+='<div class="tip todo"><b>Зал: '+gd+' из '+gn+'.</b> Осталось '+need+' — начни с дня '+nextDay+'. Между залами нужно минимум два дня.</div>';
+  }
+
+  /* 2. Домашние блоки */
+  var miss=[];
+  [['mob','мобильность'],['core','кор'],['wheel','ролик'],['prio','приоритет']].forEach(function(p){
+    var done=planDone(p[0],wk),need2=S.plan[p[0]];
+    if(need2>0&&done<need2)miss.push(p[1]+' '+done+'/'+need2);
+  });
+  if(miss.length) out+='<div class="tip"><b>Дома осталось:</b> '+miss.join(', ')+'. Мобильность и кор важнее приоритета — они работают на спину.</div>';
+  else if(S.log.filter(function(x){return weekKey(x.s)===wk;}).length) out+='<div class="tip good"><b>Домашние блоки на неделе выполнены полностью.</b></div>';
+
+  /* 3. Пауза */
+  if(d===null) out+='<div class="tip">Первая тренировка. Веса подставлены расчётные — первым подходом откалибруй под себя.</div>';
+  else if(d>=5) out+='<div class="tip todo"><b>Без зала '+d+' дн.</b> Возвращайся с весами на 5–10% ниже последних, за две тренировки догонишь. Начинать заново не нужно.</div>';
+  else if(d===0) out+='<div class="tip">Сегодня тренировка уже была. Если это второй заход — лучше ограничься мобильностью.</div>';
+
+  /* 4. Замеры */
+  var lastB=S.body.slice().sort(function(a,b){return a.d<b.d?-1:1;}).slice(-1)[0];
+  var dow=(new Date().getDay()+6)%7;
+  if(dow===6&&(!lastB||weekKey(new Date(lastB.d).getTime())!==wk))
+    out+='<div class="tip todo"><b>Воскресенье — день замеров.</b> Вкладка «Тело»: вес, обхваты, калипер.</div>';
+
+  /* 5. Факт дня */
+  out+='<div class="tip fact">'+FACTS[Math.floor(Date.now()/864e5)%FACTS.length]+'</div>';
+  return out+'</div>';
+}
+
+/* ============ ЗВУК ============ */
+var actx=null;
+function beep(times){
+  try{
+    var C=window.AudioContext||window.webkitAudioContext;if(!C)return;
+    if(!actx)actx=new C();
+    if(actx.state==='suspended')actx.resume();
+    var n=times||2;
+    for(var i=0;i<n;i++){
+      var t=actx.currentTime+i*0.28;
+      var o=actx.createOscillator(),g=actx.createGain();
+      o.connect(g);g.connect(actx.destination);
+      o.type='sine';o.frequency.setValueAtTime(i===n-1?990:760,t);
+      g.gain.setValueAtTime(0.0001,t);
+      g.gain.exponentialRampToValueAtTime(0.32,t+0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001,t+0.24);
+      o.start(t);o.stop(t+0.26);
+    }
+  }catch(e){}
+  try{if(navigator.vibrate)navigator.vibrate([160,90,160]);}catch(e){}
+}
+function primeAudio(){
+  try{
+    var C=window.AudioContext||window.webkitAudioContext;if(!C)return;
+    if(!actx)actx=new C();
+    if(actx.state==='suspended')actx.resume();
+  }catch(e){}
+}
+document.addEventListener('touchstart',primeAudio,{once:true});
+document.addEventListener('click',primeAudio,{once:true});
+
+/* ============ ТАЙМЕР ОТДЫХА ============ */
+var restT=null;
+function restSecFor(){
+  if(!S.active)return 0;
+  var id=S.active.lastEx;
+  if(!id||!EX[id])return 90;
+  return EX[id].restS||0;
+}
+function startRest(sec){
+  stopRest();
+  if(!sec){toast('Для этого упражнения отдых не нужен');return;}
+  var end=Date.now()+sec*1000;
+  var b=document.getElementById('restbtn');
+  primeAudio();
+  function up(){
+    var left=Math.ceil((end-Date.now())/1000);
+    if(left<=0){
+      clearInterval(restT);restT=null;
+      b.className='restbtn fire';b.textContent='Пора';
+      beep(3);
+      setTimeout(function(){if(!restT)paintRest();},4000);
+      return;
+    }
+    b.className='restbtn run';
+    b.textContent=Math.floor(left/60)+':'+pad(left%60);
+  }
+  up();restT=setInterval(up,250);
+}
+function stopRest(){if(restT){clearInterval(restT);restT=null;}}
+function paintRest(){
+  var b=document.getElementById('restbtn');
+  if(!S.active){b.hidden=true;stopRest();return;}
+  b.hidden=false;
+  if(restT)return;
+  var s=restSecFor();
+  b.className='restbtn';
+  b.textContent=s?'Отдых '+restLabel(s):'Отдых';
+}
+document.getElementById('restbtn').addEventListener('click',function(){
+  if(restT){stopRest();paintRest();toast('Отдых сброшен');return;}
+  startRest(restSecFor());
+});
+
+/* ============ ПОДХОДЫ НА ВРЕМЯ ============ */
+var setT=null;
+function stopSetTimer(silent){
+  if(!setT)return;
+  clearInterval(setT.iv);
+  var el=document.querySelector('.row[data-k="'+setT.kind+'"][data-i="'+setT.idx+'"]');
+  setT=null;
+  if(!silent)renderWork();
+}
+function startSetTimer(exId,kind,idx,sec,btn,row){
+  stopSetTimer(true);
+  primeAudio();
+  var end=Date.now()+sec*1000;
+  row.classList.add('timing');
+  btn.classList.add('timing');
+  function up(){
+    var left=Math.ceil((end-Date.now())/1000);
+    if(left<=0){
+      clearInterval(setT.iv);setT=null;
+      var bank=kind==='w'?S.active.w:S.active.e;
+      var arr=bank[exId]=bank[exId]||[];
+      var cur=arr[idx]||{};
+      arr[idx]={w:cur.w||0,r:sec,d:true,warn:false};
+      S.active.lastEx=exId;
+      save();beep(3);renderWork();paintRest();
+      return;
+    }
+    btn.textContent=left>=60?(Math.floor(left/60)+':'+pad(left%60)):left;
+  }
+  setT={exId:exId,kind:kind,idx:idx,iv:setInterval(up,200)};
+  up();
+}
+
 /* ============ ЭКРАН: ТРЕНИРОВКА ============ */
 function renderWork(){
   var v=document.getElementById('v-work'),sub=document.getElementById('sub');
 
   if(!S.active){
     sub.textContent='Выбери тренировку';
-    var h='';
-    var lastAny=S.log.length?S.log[S.log.length-1]:null;
-    var days=lastAny?Math.floor((Date.now()-lastAny.f)/864e5):null;
-    var line=LINES[Math.floor(Date.now()/864e5)%LINES.length];
-    h+='<div class="motd">'+(days!==null?'<b style="color:var(--tx)">'+(days===0?'Сегодня уже тренировался.':days===1?'Вчера была тренировка.':'Дней с последней тренировки: '+days+'.')+'</b> ':'')+line+'</div>';
-
+    var h=hintsHtml();
     h+='<p class="hdr">Зал</p><div class="pick">';
     ['A','B'].forEach(function(k){
       var last=S.log.filter(function(x){return x.day===k;}).slice(-1)[0];
@@ -649,6 +846,8 @@ function arm(el,label){disarm();armed={el:el,txt:el.textContent,t:setTimeout(dis
 
 /* ============ КЛИКИ ============ */
 document.addEventListener('click',function(ev){
+  var ed=ev.target.closest('[data-edit]');
+  if(ed&&!ev.target.closest('button')){openEdit(+ed.dataset.edit);return;}
   var b=ev.target.closest('button');
   if(!b){disarm();return;}
   if(armed&&armed.el!==b)disarm();
@@ -659,10 +858,19 @@ document.addEventListener('click',function(ev){
   if(a==='tech'){var op=b.getAttribute('aria-expanded')==='true';b.setAttribute('aria-expanded',op?'false':'true');b.nextElementSibling.classList.toggle('open',!op);return;}
   if(a==='finish'){var n=countActive();if(!n){toast('Нет ни одного отмеченного подхода');return;}openFinish();return;}
   if(a==='drop'){
-    if(armed&&armed.el===b){disarm();S.active=null;save();renderWork();setClock(null);toast('Тренировка отменена');}
+    if(armed&&armed.el===b){disarm();stopRest();stopSetTimer(true);S.active=null;save();renderWork();setClock(null);paintRest();toast('Тренировка отменена');}
     else arm(b,'Точно отменить? Всё сотрётся');return;}
   if(a==='fsave'){doFinish();return;}
   if(a==='mclose'){closeModal();return;}
+  if(a==='esave'){saveEdit();return;}
+  if(a==='edel'){
+    if(armed&&armed.el===b){
+      var ei=+document.getElementById('eidx').value;disarm();
+      var rm=S.log.splice(ei,1)[0];save();closeModal();
+      if(document.getElementById('v-stat').classList.contains('on'))renderStat();else renderProg();
+      toast('Удалено: '+(DAYS[rm.day]?DAYS[rm.day].t:rm.day)+' от '+dstr(rm.s));
+    }else arm(b,'Точно удалить?');
+    return;}
   if(a==='note'){openNote(b.closest('.ex').dataset.ex);return;}
   if(a==='nsave'){saveNote();return;}
   if(a==='set+'||a==='set-'){
@@ -697,6 +905,15 @@ document.addEventListener('click',function(ev){
     var arr=bank[exId2]=bank[exId2]||[];
     var cur=arr[idx]||{},nd=!cur.d;
     var wv=wIn?num(wIn.value):0,rv=num(rIn.value);
+
+    /* упражнение на время: первый тап запускает отсчёт */
+    if(m.unit==='сек'&&nd){
+      if(setT&&setT.exId===exId2&&setT.kind===kind&&setT.idx===idx){stopSetTimer();toast('Отсчёт отменён');return;}
+      startSetTimer(exId2,kind,idx,rv||m.repdef||30,b,row);
+      return;
+    }
+    if(setT&&setT.exId===exId2&&setT.kind===kind&&setT.idx===idx)stopSetTimer(true);
+
     var warn=false;
     if(nd&&kind==='s'){
       var pv=lastDone(exId2,'e'),p=pv&&pv[idx]?pv[idx]:null;
@@ -709,7 +926,8 @@ document.addEventListener('click',function(ev){
       if(m.e1&&now>0&&before>0&&now>before+0.5) setTimeout(function(){toast('Рекорд! Расчётный 1ПМ: '+Math.round(now)+' кг',1);},80);
     }
     arr[idx]={w:wv,r:rv,d:nd,warn:warn};
-    save();renderWork();return;
+    if(nd)S.active.lastEx=exId2;
+    save();renderWork();paintRest();return;
   }
 });
 document.addEventListener('change',function(ev){
@@ -752,7 +970,7 @@ function commit(exId,kind,idx,row){
   save();
 }
 function countActive(){var n=0;Object.keys(S.active.e).forEach(function(k){S.active.e[k].forEach(function(s){if(s&&s.d)n++;});});return n;}
-function startDay(k){S.active={day:k,type:DAYS[k].type,s:Date.now(),acc:0,seen:Date.now(),e:{},w:{}};accSaveAt=Date.now();save();renderWork();setClock(true);window.scrollTo(0,0);}
+function startDay(k){stopRest();stopSetTimer(true);S.active={day:k,type:DAYS[k].type,s:Date.now(),pAcc:0,e:{},w:{}};accSaveAt=Date.now();save();renderWork();setClock(true);paintRest();window.scrollTo(0,0);}
 
 /* ============ МОДАЛКА ЗАВЕРШЕНИЯ ============ */
 function openModal(html){document.getElementById('modal').innerHTML=html;document.getElementById('mask').classList.add('on');}
@@ -790,7 +1008,7 @@ function doFinish(){
   var kcal=num(document.getElementById('fkcal').value);
   var note=document.getElementById('fnote').value.trim();
   S.log.push({day:a.day,type:a.type||DAYS[a.day].type,s:a.s,f:a.s+mins*60000,e:ce,w:cw,kcal:kcal||0,note:note});
-  S.active=null;save();closeModal();renderWork();setClock(null);
+  stopRest();stopSetTimer(true);S.active=null;save();closeModal();renderWork();setClock(null);paintRest();
   var l=S.log[S.log.length-1];
   toast('Записано: '+countSets(l)+' подходов, '+mins+' мин'+(kcal?', '+kcal+' ккал':''));
 }
@@ -806,6 +1024,40 @@ function saveNote(){
   var id=document.getElementById('nid').value,val=document.getElementById('nval').value.trim();
   S.custom[id]=S.custom[id]||{};S.custom[id].note=val;
   save();closeModal();renderWork();toast(val?'Примечание сохранено':'Примечание удалено');
+}
+
+function openEdit(i){
+  var x=S.log[i];if(!x)return;
+  var d=DAYS[x.day]||{t:x.day,ex:[]};
+  var mins=Math.max(1,Math.round((x.f-x.s)/60000));
+  var lines=[];
+  Object.keys(x.e).forEach(function(k){
+    var m=EX[k];if(!m)return;
+    var txt=x.e[k].map(function(s){return m.noW?s.r:fmtW(s.w)+'×'+s.r;}).join('  ');
+    lines.push('<li><b>'+x.e[k].length+'</b><span>'+m.name+'<br><span style="color:var(--mut);font-family:IBM Plex Mono,monospace;font-size:12.5px">'+txt+'</span></span></li>');
+  });
+  openModal('<h3>Правка тренировки</h3><p class="sub">'+d.t+' · '+dwd(x.s)+'</p>'+
+    '<ul class="done-list">'+lines.join('')+'</ul>'+
+    '<label class="mlab">Длительность, мин</label>'+
+    '<input type="text" inputmode="numeric" class="txt" id="emins" value="'+mins+'">'+
+    '<label class="mlab">Калории<em>С нагрудного пульсометра</em></label>'+
+    '<input type="text" inputmode="numeric" class="txt" id="ekcal" value="'+(x.kcal||'')+'">'+
+    '<label class="mlab">Заметка</label>'+
+    '<textarea class="small" id="enote" placeholder="Самочувствие, спина, что пошло не так">'+esc(x.note||'')+'</textarea>'+
+    '<input type="hidden" id="eidx" value="'+i+'">'+
+    '<button class="big go" data-a="esave">Сохранить</button>'+
+    '<button class="big fin gap" data-a="mclose">Назад</button>'+
+    '<button class="big dan gap" data-a="edel">Удалить тренировку</button>');
+}
+function saveEdit(){
+  var i=+document.getElementById('eidx').value,x=S.log[i];if(!x)return;
+  var mins=Math.max(1,num(document.getElementById('emins').value));
+  x.f=x.s+mins*60000;
+  x.kcal=num(document.getElementById('ekcal').value)||0;
+  x.note=document.getElementById('enote').value.trim();
+  save();closeModal();
+  if(document.getElementById('v-stat').classList.contains('on'))renderStat();else renderProg();
+  toast('Тренировка обновлена');
 }
 
 /* ============ РАСЧЁТЫ ============ */
@@ -901,7 +1153,7 @@ function renderProg(){
   ids.forEach(function(id){h+='<option value="'+id+'"'+(id===progSel?' selected':'')+'>'+EX[id].name+'</option>';});
   h+='</select>';
   var m=EX[progSel],rows=[];
-  S.log.forEach(function(x){var e=x.e[progSel];if(e&&e.length){var b=null;e.forEach(function(s){if(!b||(m.noW||m.bw?s.r>b.r:s.w>b.w||(s.w===b.w&&s.r>b.r)))b=s;});rows.push({ts:x.s,sets:e,best:b});}});
+  S.log.forEach(function(x,li){var e=x.e[progSel];if(e&&e.length){var b=null;e.forEach(function(s){if(!b||(m.noW||m.bw?s.r>b.r:s.w>b.w||(s.w===b.w&&s.r>b.r)))b=s;});rows.push({ts:x.s,sets:e,best:b,li:li});}});
   if(!rows.length){h+='<p class="empty">По этому упражнению пока нет записей.</p>';v.innerHTML=h;bindSel();return;}
   if(m.e1){
     h+='<div class="chart"><h5>Расчётный 1ПМ, кг</h5>'+lineChart(rows.map(function(r){
@@ -913,10 +1165,10 @@ function renderProg(){
     h+='<div class="chart"><h5>Объём за тренировку, кг</h5>'+lineChart(rows.map(function(r){
       var mu=m.hand?2:1,t=0;r.sets.forEach(function(s){t+=(m.bw?bodyW()+s.w:s.w)*s.r*mu;});return{x:dstr(r.ts),y:Math.round(t)};}),'#5B9DD9','кг')+'</div>';
   }
-  h+='<h4>Последние тренировки</h4><p class="sub">Только рабочие подходы</p><table><tr><th>Дата</th><th>Подходы</th></tr>';
+  h+='<h4>Последние тренировки</h4><p class="sub">Только рабочие подходы. Нажми на строку, чтобы поправить время, калории и заметку.</p><table><tr><th>Дата</th><th>Подходы</th></tr>';
   rows.slice(-14).reverse().forEach(function(r){
     var t=r.sets.map(function(s){return m.noW?s.r:((m.bw&&s.w>0?'+'+fmtW(s.w)+'×':m.bw?'':fmtW(s.w)+'×'))+s.r;}).join('   ');
-    h+='<tr><td class="n">'+dwd(r.ts)+'</td><td class="n" style="color:var(--tx)">'+t+'</td></tr>';
+    h+='<tr data-edit="'+r.li+'" style="cursor:pointer"><td class="n">'+dwd(r.ts)+'</td><td class="n" style="color:var(--tx)">'+t+'</td></tr>';
   });
   h+='</table>';
   v.innerHTML=h;bindSel();
@@ -1043,8 +1295,8 @@ function renderStat(){
   });
 
   /* план */
-  h+='<h4>План на неделю</h4><p class="sub">Сколько тренировок нужно, чтобы неделя считалась выполненной.</p><div class="scroll"><table>'+
-     '<tr><th>Что</th><th>В неделю</th></tr>'+
+  h+='<h4>План на неделю</h4><p class="sub">Сколько нужно, чтобы неделя считалась выполненной, и сколько уже сделано.</p><div class="scroll"><table>'+
+     '<tr><th>Что</th><th style="text-align:center">Сделано</th><th>План</th></tr>'+
      planRow('gym','Зал (день A + день B)')+planRow('mob','Мобильность')+planRow('core','Кор и спина')+
      planRow('wheel','Ролик')+planRow('prio','Приоритет')+'</table></div>';
 
@@ -1057,10 +1309,10 @@ function renderStat(){
       '<div class="kpi"><b>'+S.log.length+'</b><span>тренировок</span></div>'+
       '<div class="kpi"><b>'+(Math.round(tt/100)/10)+'т</b><span>поднято</span></div>'+
       '<div class="kpi"><b>'+Math.round(ad/60000)+'</b><span>мин в зале<br>в среднем</span></div></div>';
-    h+='<h4>История</h4>';
-    S.log.slice().reverse().slice(0,30).forEach(function(x){
-      var isG=(x.type||DAYS[x.day].type)==='gym';
-      h+='<div class="hist"><span class="hd'+(isG?'':' h')+'">'+(isG?x.day:'•')+'</span><span class="hb"><b>'+DAYS[x.day].t+' · '+dwd(x.s)+'</b>'+
+    h+='<h4>История</h4><p class="sub">Нажми на тренировку, чтобы поправить время, калории и заметку.</p>';
+    S.log.map(function(x,i){return {x:x,i:i};}).reverse().slice(0,30).forEach(function(o){
+      var x=o.x,isG=(x.type||DAYS[x.day].type)==='gym';
+      h+='<div class="hist" data-edit="'+o.i+'" style="cursor:pointer"><span class="hd'+(isG?'':' h')+'">'+(isG?x.day:'•')+'</span><span class="hb"><b>'+(DAYS[x.day]?DAYS[x.day].t:x.day)+' · '+dwd(x.s)+'</b>'+
         '<span>'+dur(x.f-x.s)+' · '+countSets(x)+' подх.'+(tonnage(x)?' · '+Math.round(tonnage(x))+' кг':'')+(x.kcal?' · '+x.kcal+' ккал':'')+'</span>'+
         (x.note?'<span style="color:var(--dim);font-family:inherit">'+esc(x.note)+'</span>':'')+'</span></div>';
     });
@@ -1076,8 +1328,12 @@ function renderStat(){
   bindPlan();
 }
 function planRow(k,n){
-  return '<tr><td>'+n+'</td><td style="width:120px"><span class="fld"><button data-a="pl" data-k="'+k+'" data-s="-1">−</button>'+
-    '<input type="text" inputmode="numeric" id="p_'+k+'" value="'+S.plan[k]+'" style="height:34px"><button data-a="pl" data-k="'+k+'" data-s="1">+</button></span></td></tr>';
+  var done=planDone(k),need=S.plan[k];
+  var col=need===0?'var(--dim)':(done>=need?'var(--ok)':(done>0?'var(--warn)':'var(--stop)'));
+  return '<tr><td>'+n+'</td>'+
+    '<td style="width:64px;text-align:center"><b class="mono" style="color:'+col+';font-size:16px">'+done+'/'+need+'</b></td>'+
+    '<td style="width:118px"><span class="fld"><button data-a="pl" data-k="'+k+'" data-s="-1">−</button>'+
+    '<input type="text" inputmode="numeric" id="p_'+k+'" value="'+need+'" style="height:34px" readonly><button data-a="pl" data-k="'+k+'" data-s="1">+</button></span></td></tr>';
 }
 function bindPlan(){
   document.querySelectorAll('[data-a="pl"]').forEach(function(b){
@@ -1196,6 +1452,7 @@ function boot(migrated){
     accSaveAt=Date.now();
   }
   renderWork();
+  paintRest();
   if(S.active){
     setClock(true);
     toast('Тренировка восстановлена: '+Math.round(bumpElapsed()/60000)+' мин'+(isPaused()?' (пауза)':''));
