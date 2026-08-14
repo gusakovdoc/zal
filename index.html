@@ -597,25 +597,43 @@ function hintsHtml(){
 }
 
 /* ============ ЗВУК ============ */
-var actx=null;
+var actx=null,amaster=null;
+/* Мягкое насыщение (tanh) вместо жёсткого клиппинга: даёт максимум громкости
+   без хрипа и заметно лучше «пробивает» динамик телефона. */
+function audioOut(){
+  if(!amaster){
+    var t=actx.currentTime,N=1024,curve=new Float32Array(N),k=2.2,th=Math.tanh(k);
+    for(var i=0;i<N;i++){curve[i]=Math.tanh((i*2/N-1)*k)/th;}
+    var ws=actx.createWaveShaper();ws.curve=curve;ws.oversample='4x';
+    var trim=actx.createGain();trim.gain.setValueAtTime(0.95,t);
+    amaster=actx.createGain();amaster.gain.setValueAtTime(1,t);
+    amaster.connect(ws);ws.connect(trim);trim.connect(actx.destination);
+  }
+  return amaster;
+}
 function beep(times){
   try{
     var C=window.AudioContext||window.webkitAudioContext;if(!C)return;
     if(!actx)actx=new C();
     if(actx.state==='suspended')actx.resume();
+    var dst=audioOut();
     var n=times||2;
     for(var i=0;i<n;i++){
       var t=actx.currentTime+i*0.28;
-      var o=actx.createOscillator(),g=actx.createGain();
-      o.connect(g);g.connect(actx.destination);
-      o.type='sine';o.frequency.setValueAtTime(i===n-1?990:760,t);
+      var f=i===n-1?1568:1046;
+      var g=actx.createGain();g.connect(dst);
       g.gain.setValueAtTime(0.0001,t);
-      g.gain.exponentialRampToValueAtTime(0.32,t+0.02);
-      g.gain.exponentialRampToValueAtTime(0.0001,t+0.24);
-      o.start(t);o.stop(t+0.26);
+      g.gain.exponentialRampToValueAtTime(0.9,t+0.01);
+      g.gain.exponentialRampToValueAtTime(0.0001,t+0.26);
+      /* треугольник + октава сверху: заметно слышнее синуса на динамике телефона */
+      var o=actx.createOscillator();o.type='triangle';o.frequency.setValueAtTime(f,t);o.connect(g);
+      var o2=actx.createOscillator(),g2=actx.createGain();
+      o2.type='sine';o2.frequency.setValueAtTime(f*2,t);g2.gain.setValueAtTime(0.35,t);
+      o2.connect(g2);g2.connect(g);
+      o.start(t);o.stop(t+0.28);o2.start(t);o2.stop(t+0.28);
     }
   }catch(e){}
-  try{if(navigator.vibrate)navigator.vibrate([160,90,160]);}catch(e){}
+  try{if(navigator.vibrate)navigator.vibrate([200,90,200,90,240]);}catch(e){}
 }
 function primeAudio(){
   try{
