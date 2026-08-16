@@ -250,6 +250,15 @@ textarea.small{height:74px}
 .macro span{font-size:11.5px;color:var(--mut)}
 .tgtbig{font-family:"IBM Plex Mono",monospace;font-weight:600;font-size:32px;color:var(--ok);line-height:1.1}
 
+/* смахиваемые карточки: горизонталь перехватываем, вертикальную прокрутку оставляем */
+[data-tip]{touch-action:pan-y}
+.tip.fact b{display:block;font-family:"Barlow Condensed",sans-serif;font-weight:600;font-size:13px;letter-spacing:.13em;text-transform:uppercase;color:var(--dat);margin-bottom:4px}
+
+/* нет сети */
+.offbar{position:sticky;top:0;z-index:29;background:var(--warn-bg);border-bottom:1px solid var(--warn);color:var(--warn);font-size:13.5px;line-height:1.4;padding:9px 14px;text-align:center}
+.offbar b{color:var(--warn);font-weight:600}
+.offbar[hidden]{display:none}
+
 /* На узком экране пятизначный вес (13,45 или 120,5) не помещался в поле и
    обрезался. Отыгрываем ширину у кнопок и подписи единиц. */
 @media (max-width:400px){
@@ -304,6 +313,7 @@ textarea.small{height:74px}
   <button class="restbtn" id="restbtn" hidden>Отдых</button>
   <div class="clock off mono" id="clock">--:--</div>
 </div></div>
+<div class="offbar" id="offbar" hidden></div>
 
 <main>
   <section class="view on wrap" id="v-work"></section>
@@ -313,7 +323,7 @@ textarea.small{height:74px}
 </main>
 
 <nav class="nav">
-  <button data-v="work" aria-current="true">Тренировка</button>
+  <button data-v="work" aria-current="true">Главная</button>
   <button data-v="prog" aria-current="false">Прогресс</button>
   <button data-v="body" aria-current="false">Тело</button>
   <button data-v="stat" aria-current="false">Итоги</button>
@@ -644,7 +654,26 @@ var FACTS=[
 'Замеры тела информативнее весов: вода и гликоген качают вес на ±1,5 кг за день, а обхваты меняются медленно и честно.',
 'Тренировка на 60% от плана даёт примерно 80% результата. Пропуск даёт ноль. Приходи даже вполсилы.',
 'После падела мышцы уже под эксцентрической нагрузкой. Поэтому ноги в зале урезаны до пяти подходов — это не экономия, а расчёт.',
-'Растяжка перед подходами временно снижает силу. Мобильность лучше делать отдельно, в рабочие перерывы.'];
+'Растяжка перед подходами временно снижает силу. Мобильность лучше делать отдельно, в рабочие перерывы.',
+'Рабочий диапазон объёма — 10–20 подходов на группу в неделю. Меньше десяти почти не растит, больше двадцати чаще упирается в восстановление, а не в стимул.',
+'Прогрессия — это не только вес. Тот же вес на один повтор больше, с той же техникой, уже перегрузка. Поэтому диапазон повторов закрывают до конца, а потом добавляют килограммы.',
+'Полная амплитуда растит лучше частичной даже при меньшем весе. Особенно нижняя часть движения, где мышца растянута.',
+'Белок лучше разложить на 4 приёма по 0,4 г на кг, чем съесть тот же объём за два. Синтез отвечает на каждый приём отдельно.',
+'Креатин не требует загрузки. 5 г в день выйдут на то же насыщение за 3–4 недели, только без отёчности первых дней.',
+'Алкоголь в вечер после тренировки срезает синтез белка примерно на треть до следующего дня. Это дороже, чем кажется.',
+'Кофеин выводится наполовину за 5 часов. Чашка в 16:00 — это четверть дозы в крови к полуночи и заметно худший сон.',
+'Вес утром скачет от соли и углеводов накануне на 1–2 кг. Именно поэтому считается среднее за неделю, а не отдельное утро.',
+'Разгрузочная неделя каждые 6–10 недель: половина объёма, вес прежний. Силовые после неё обычно выше, чем до.',
+'Хват часто отказывает раньше спины в тягах. Лямки — не читинг, а способ дать спине доработать до своего отказа.',
+'Диск межпозвонковый утром максимально наполнен жидкостью и хуже терпит нагруженное сгибание. Тяжёлое на поясницу лучше сдвинуть на вторую половину дня.',
+'При эпикондилите почти всегда просажена сила хвата на больной стороне. Она же — самый честный маркер восстановления.',
+'В паделе локоть и плечо грузит не удар, а торможение ракетки после него. Эксцентрика предплечья работает ровно против этого.',
+'Обезвоживание на 2% от массы тела уже снижает силовые. Литр воды за пару часов до зала стоит дешевле любого предтреника.',
+'Простуда без температуры и ниже шеи — тренироваться можно, урезав объём вдвое. Температура или ломота — только отдых.',
+'Отказ в каждом подходе не ускоряет рост, но заметно замедляет восстановление. Запас в 1–2 повтора почти во всех подходах — рабочий компромисс.',
+'Когда калорий не хватает, тело первым делом срезает бытовую активность: меньше ходьбы, меньше жестов. Поэтому при недоборе шаги падают сами, без твоего решения.',
+'Замер обхвата честен только при одинаковых условиях: то же время суток, та же точка, то же натяжение ленты. Иначе разница в сантиметр — это про ленту, а не про руку.',
+'Мышца растёт ещё 24–48 часов после тренировки. Добивать её на следующий день тем же движением — значит мешать, а не помогать.'];
 
 /* ============ СОСТОЯНИЕ ============ */
 var PLAN0={gym:2,mob:5,core:3,wheel:2,prio:2,elbow:5,padel:2};
@@ -652,13 +681,13 @@ var PLAN0={gym:2,mob:5,core:3,wheel:2,prio:2,elbow:5,padel:2};
 var PLANMIN={gym:1,mob:2,core:1,wheel:0,prio:0,elbow:5,padel:0};
 var S={active:null,log:[],body:[],custom:{},setsOv:{},plan:copy(PLAN0),
        planHist:{},bad:{},sync:{tok:'',repo:'',path:'data.json',at:0,err:''},backupAt:0,
-       gain:'hard',advice:null,advSeen:''};
+       gain:'hard',advice:null,advSeen:'',dismissed:{}};
 var tick=null,calM=null,statWk=null;
 function copy(o){var r={};Object.keys(o).forEach(function(k){r[k]=o[k];});return r;}
 
 function save(){store.set('gym:v2',{active:S.active,log:S.log,body:S.body,custom:S.custom,setsOv:S.setsOv,
   plan:S.plan,planHist:S.planHist,bad:S.bad,sync:S.sync,backupAt:S.backupAt,
-  gain:S.gain,advice:S.advice,advSeen:S.advSeen});}
+  gain:S.gain,advice:S.advice,advSeen:S.advSeen,dismissed:S.dismissed});}
 function toast(m,pr){
   var t=document.getElementById('toast');
   t.textContent=m;t.className='toast on'+(pr?' pr':'');
@@ -920,10 +949,17 @@ function adviceHtml(){
   (A.general||[]).forEach(function(g){
     body+='<div class="adv">'+(g.t?'<b>'+esc(g.t)+'</b>':'')+esc(g.b||'')+'</div>';
   });
-  return '<button class="advbtn'+(advOpen?' on':'')+'" data-a="advtog">'+
-         '<span class="advtag">РАЗБОР CLAUDE</span>'+
-         '<span class="d">'+esc(A.at||'')+(advFresh()?' · <em>новый</em>':'')+'</span></button>'+
-         '<div class="advbox'+(advOpen?' on':'')+'">'+body+'</div>';
+  return card('adv',A.at||'',
+    '<button class="advbtn'+(advOpen?' on':'')+'" data-a="advtog">'+
+    '<span class="advtag">РАЗБОР CLAUDE</span>'+
+    '<span class="d">'+esc(A.at||'')+(advFresh()?' · <em>новый</em>':'')+'</span></button>'+
+    '<div class="advbox'+(advOpen?' on':'')+'">'+body+'</div>','advwrap');
+}
+/* Карточка, которую можно смахнуть. sig — отпечаток данных: пока он тот же,
+   смахнутая карточка не возвращается; изменились данные — появится снова. */
+function card(id,sig,html,cls){
+  if(S.dismissed[id]===String(sig))return '';
+  return '<div class="'+(cls||'tipwrap')+'" data-tip="'+id+'" data-sig="'+esc(String(sig))+'">'+html+'</div>';
 }
 function hintsHtml(){
   var out=adviceHtml()+'<div class="tips">';
@@ -931,16 +967,16 @@ function hintsHtml(){
   var d=daysSince();
 
   var P=planFor(wk);
-  if(S.bad[wk]) out+='<div class="tip todo"><b>Неделя объявлена трудной.</b> План урезан до минимума, который удерживает результат: зал 1, мобильность 2, кор 1, локоть 5. Снять — на вкладке «Итоги».</div>';
+  if(S.bad[wk]) out+=card('bad',wk,'<div class="tip todo"><b>Неделя объявлена трудной.</b> План урезан до минимума, который удерживает результат: зал 1, мобильность 2, кор 1, локоть 5. Снять — на вкладке «Итоги».</div>');
 
   /* 1. Статус недели */
   var gd=planDone('gym',wk),gn=P.gym;
   if(gd>=gn&&gn>0){
-    out+='<div class="tip good"><b>Зал на неделе закрыт: '+gd+' из '+gn+'.</b> Дальше решают еда и сон, а не дополнительные подходы.</div>';
+    out+=card('gym',wk+':'+gd+'/'+gn,'<div class="tip good"><b>Зал на неделе закрыт: '+gd+' из '+gn+'.</b> Дальше решают еда и сон, а не дополнительные подходы.</div>');
   }else{
     var need=gn-gd;
     var nextDay=(!S.log.filter(function(x){return weekKey(x.s)===wk&&x.day==='A';}).length)?'A':'B';
-    out+='<div class="tip todo"><b>Зал: '+gd+' из '+gn+'.</b> Осталось '+need+' — начни с дня '+nextDay+'. Между залами нужно минимум два дня.</div>';
+    out+=card('gym',wk+':'+gd+'/'+gn,'<div class="tip todo"><b>Зал: '+gd+' из '+gn+'.</b> Осталось '+need+' — начни с дня '+nextDay+'. Между залами нужно минимум два дня.</div>');
   }
 
   /* 2. Домашние блоки */
@@ -949,38 +985,41 @@ function hintsHtml(){
     var done=planDone(p[0],wk),need2=P[p[0]];
     if(need2>0&&done<need2)miss.push(p[1]+' '+done+'/'+need2);
   });
-  if(miss.length) out+='<div class="tip"><b>Дома осталось:</b> '+miss.join(', ')+'. Мобильность и кор важнее приоритета — они работают на спину.</div>';
-  else if(S.log.filter(function(x){return weekKey(x.s)===wk;}).length) out+='<div class="tip good"><b>Домашние блоки на неделе выполнены полностью.</b></div>';
+  if(miss.length) out+=card('home',wk+':'+miss.join(','),'<div class="tip"><b>Дома осталось:</b> '+miss.join(', ')+'. Мобильность и кор важнее приоритета — они работают на спину.</div>');
+  else if(S.log.filter(function(x){return weekKey(x.s)===wk;}).length) out+=card('home',wk+':all','<div class="tip good"><b>Домашние блоки на неделе выполнены полностью.</b></div>');
 
   /* 2б. Застой */
   var stuck=[];
   Object.keys(EX).forEach(function(k){var n=plateau(k);if(n)stuck.push({n:EX[k].name,w:n});});
   stuck.sort(function(a,b){return b.w-a.w;});
   if(stuck.length){
-    out+='<div class="tip todo"><b>Встало: '+stuck.slice(0,3).map(function(x){return x.n.toLowerCase()+' ('+x.w+' нед)';}).join(', ')+'.</b> '+
-      'Три недели без роста — причина обычно не в тренировке. Проверь сон, добор калорий и не пора ли сменить упражнение.</div>';
+    var top3=stuck.slice(0,3);
+    out+=card('stuck',top3.map(function(x){return x.n+x.w;}).join('|'),
+      '<div class="tip todo"><b>Встало: '+top3.map(function(x){return x.n.toLowerCase()+' ('+x.w+' нед)';}).join(', ')+'.</b> '+
+      'Три недели без роста — причина обычно не в тренировке. Проверь сон, добор калорий и не пора ли сменить упражнение.</div>');
   }
 
   /* 3. Пауза */
-  if(d===null) out+='<div class="tip">Первая тренировка. Веса подставлены расчётные — первым подходом откалибруй под себя.</div>';
-  else if(d>=5) out+='<div class="tip todo"><b>Без зала '+d+' дн.</b> Возвращайся с весами на 5–10% ниже последних, за две тренировки догонишь. Начинать заново не нужно.</div>';
-  else if(d===0) out+='<div class="tip">Сегодня тренировка уже была. Если это второй заход — лучше ограничься мобильностью.</div>';
+  if(d===null) out+=card('pause','first','<div class="tip">Первая тренировка. Веса подставлены расчётные — первым подходом откалибруй под себя.</div>');
+  else if(d>=5) out+=card('pause','off'+d,'<div class="tip todo"><b>Без зала '+d+' дн.</b> Возвращайся с весами на 5–10% ниже последних, за две тренировки догонишь. Начинать заново не нужно.</div>');
+  else if(d===0) out+=card('pause','today'+iso(Date.now()),'<div class="tip">Сегодня тренировка уже была. Если это второй заход — лучше ограничься мобильностью.</div>');
 
   /* 4. Замеры */
   var lastB=S.body.slice().sort(function(a,b){return a.d<b.d?-1:1;}).slice(-1)[0];
   var dow=(new Date().getDay()+6)%7;
   if(dow===6&&(!lastB||weekKey(new Date(lastB.d).getTime())!==wk))
-    out+='<div class="tip todo"><b>Воскресенье — день замеров.</b> Вкладка «Тело»: вес, обхваты, калипер и средние шаги за неделю. От них считается норма калорий.</div>';
+    out+=card('meas',wk,'<div class="tip todo"><b>Воскресенье — день замеров.</b> Вкладка «Тело»: вес, обхваты, калипер, средние шаги и съеденные калории. От них считается норма.</div>');
 
   /* 4б. Резервная копия */
   if(S.log.length>=5){
     var since=S.backupAt?Math.round((Date.now()-S.backupAt)/864e5):null;
     if(!S.sync.tok&&(since===null||since>=30))
-      out+='<div class="tip todo"><b>'+(since===null?'Копия данных ещё ни разу не делалась.':'Последняя копия '+since+' дн. назад.')+'</b> Данные живут только в этом браузере. Настрой синхронизацию с GitHub во вкладке «Итоги» — дальше всё пойдёт само.</div>';
+      out+=card('backup',since===null?'never':Math.floor(since/30),'<div class="tip todo"><b>'+(since===null?'Копия данных ещё ни разу не делалась.':'Последняя копия '+since+' дн. назад.')+'</b> Данные живут только в этом браузере. Настрой синхронизацию с GitHub во вкладке «Итоги» — дальше всё пойдёт само.</div>');
   }
 
-  /* 5. Факт дня */
-  out+='<div class="tip fact">'+FACTS[Math.floor(Date.now()/864e5)%FACTS.length]+'</div>';
+  /* 5. Совет дня — меняется раз в сутки, смахнутый вернётся завтра */
+  var fday=Math.floor(Date.now()/864e5);
+  out+=card('fact',fday,'<div class="tip fact"><b>Совет дня</b>'+FACTS[fday%FACTS.length]+'</div>');
   return out+'</div>';
 }
 
@@ -1081,6 +1120,71 @@ function notifyRest(){
 }
 document.addEventListener('touchstart',primeAudio,{once:true});
 document.addEventListener('click',primeAudio,{once:true});
+
+/* ============ СМАХИВАНИЕ КАРТОЧЕК ============
+   Направление не важно — уводим в ту сторону, куда потянули. Порог 80 px,
+   чтобы случайное движение при прокрутке ничего не убирало. */
+var swipeSt=null,swipeAt=0;
+document.addEventListener('pointerdown',function(e){
+  var el=e.target.closest('[data-tip]');
+  if(!el)return;
+  swipeSt={el:el,x:e.clientX,y:e.clientY,dx:0,lock:null};
+});
+document.addEventListener('pointermove',function(e){
+  if(!swipeSt)return;
+  var dx=e.clientX-swipeSt.x,dy=e.clientY-swipeSt.y;
+  if(swipeSt.lock===null){
+    if(Math.abs(dx)<6&&Math.abs(dy)<6)return;
+    /* решаем один раз: горизонталь — наша, вертикаль — прокрутке */
+    swipeSt.lock=Math.abs(dx)>Math.abs(dy)?'x':'y';
+  }
+  if(swipeSt.lock!=='x')return;
+  swipeSt.dx=dx;
+  swipeSt.el.style.transform='translateX('+dx+'px)';
+  swipeSt.el.style.opacity=String(Math.max(0.15,1-Math.abs(dx)/220));
+});
+function swipeEnd(){
+  if(!swipeSt)return;
+  var el=swipeSt.el,dx=swipeSt.dx,lock=swipeSt.lock;
+  swipeSt=null;
+  if(lock!=='x'){el.style.transform='';el.style.opacity='';return;}
+  el.style.transition='transform .18s ease-out,opacity .18s ease-out';
+  if(Math.abs(dx)>80){
+    swipeAt=Date.now();
+    el.style.transform='translateX('+(dx>0?window.innerWidth:-window.innerWidth)+'px)';
+    el.style.opacity='0';
+    var id=el.dataset.tip,sig=el.dataset.sig||'';
+    setTimeout(function(){
+      S.dismissed[id]=sig;save();renderWork();
+      toast('Скрыто. Вернётся, когда обновятся данные');
+    },170);
+  }else{
+    el.style.transform='';el.style.opacity='';
+    setTimeout(function(){el.style.transition='';},200);
+  }
+}
+document.addEventListener('pointerup',swipeEnd);
+document.addEventListener('pointercancel',swipeEnd);
+
+/* ============ НЕТ СЕТИ ============ */
+function offline(){return typeof navigator.onLine==='boolean'&&!navigator.onLine;}
+function paintNet(quiet){
+  var b=document.getElementById('offbar');
+  if(offline()){
+    b.innerHTML='<b>Нет сети.</b> Тренировка пишется на телефон, в облако уедет сама, когда связь вернётся.';
+    b.hidden=false;
+    if(!quiet)cloudToast(false,'Нет сети — работаем офлайн');
+  }else{
+    b.hidden=true;
+  }
+}
+window.addEventListener('offline',function(){paintNet(false);});
+window.addEventListener('online',function(){
+  paintNet(true);
+  cloudToast(true,'Сеть вернулась');
+  /* догоняем то, что не уехало, пока связи не было */
+  if(cloudReady()&&S.sync.err)setTimeout(function(){cloudPush(true);},600);
+});
 
 /* ============ ЭКРАН НЕ ГАСНЕТ ============ */
 var wlock=null;
@@ -1189,20 +1293,20 @@ function renderWork(){
     sub.textContent='Выбери тренировку';
     var wk=weekKey(Date.now()),P=planFor(wk);
     var h=hintsHtml();
-    h+='<p class="hdr">Зал</p><div class="pick">';
+    h+='<p class="hdr">Дома</p><div class="pick home">';
+    HOME_KEYS.forEach(function(k){
+      var last=S.log.filter(function(x){return x.day===k;}).slice(-1)[0];
+      h+='<button data-start="'+k+'">'+frac(planDone(k,wk),P[k])+'<span class="dd"><b>'+DAYS[k].t+'</b>'+
+         '<span>~'+DAYS[k].mins+' мин · '+DAYS[k].ex.length+' упражнений</span>'+
+         '<em>'+(last?'Последний раз: '+dwd(last.s):'Ещё не выполнялся')+'</em></span></button>';
+    });
+    h+='</div><p class="hdr">Зал</p><div class="pick">';
     var gd=planDone('gym',wk);
     ['A','B'].forEach(function(k){
       var last=S.log.filter(function(x){return x.day===k;}).slice(-1)[0];
       var tot=DAYS[k].ex.reduce(function(a,x){return a+setsOf(k,x);},0);
       h+='<button data-start="'+k+'">'+frac(gd,P.gym)+'<span class="dd"><b>'+DAYS[k].t+'</b>'+
          '<span>'+DAYS[k].ex.length+' упражнений · '+tot+' рабочих подходов</span>'+
-         '<em>'+(last?'Последний раз: '+dwd(last.s):'Ещё не выполнялся')+'</em></span></button>';
-    });
-    h+='</div><p class="hdr">Дома</p><div class="pick home">';
-    HOME_KEYS.forEach(function(k){
-      var last=S.log.filter(function(x){return x.day===k;}).slice(-1)[0];
-      h+='<button data-start="'+k+'">'+frac(planDone(k,wk),P[k])+'<span class="dd"><b>'+DAYS[k].t+'</b>'+
-         '<span>~'+DAYS[k].mins+' мин · '+DAYS[k].ex.length+' упражнений</span>'+
          '<em>'+(last?'Последний раз: '+dwd(last.s):'Ещё не выполнялся')+'</em></span></button>';
     });
     h+='</div><p class="hdr">Корт</p><div class="pick home">';
@@ -1370,6 +1474,8 @@ function arm(el,label){disarm();armed={el:el,txt:el.textContent,t:setTimeout(dis
 
 /* ============ КЛИКИ ============ */
 document.addEventListener('click',function(ev){
+  /* клик сразу после смахивания игнорируем — карточка уже уехала */
+  if(Date.now()-swipeAt<400)return;
   var ed=ev.target.closest('[data-edit]');
   if(ed&&!ev.target.closest('button')){openEdit(+ed.dataset.edit);return;}
   var b=ev.target.closest('button');
@@ -2048,31 +2154,6 @@ function renderStat(){
     h+=sec('hist','История','последние '+Math.min(30,S.log.length),hb);
   }
 
-  /* ---- разбор от Claude ---- */
-  var A=S.advice,ab='';
-  if(A){
-    ab+='<div class="advhead"><span class="advtag">РАЗБОР CLAUDE</span><span>'+esc(A.at||'')+'</span></div>';
-    if(A.note)ab+='<div class="adv">'+esc(A.note)+'</div>';
-    (A.general||[]).forEach(function(g){ab+='<div class="adv">'+(g.t?'<b>'+esc(g.t)+'</b>':'')+esc(g.b||'')+'</div>';});
-    var exk=Object.keys(A.ex||{});
-    if(exk.length){
-      ab+='<p class="sub" style="margin-top:14px">По упражнениям — эти же подсказки видны прямо в карточках во время тренировки.</p>';
-      exk.forEach(function(k){
-        if(!EX[k])return;
-        var a2=A.ex[k],bits=[];
-        if(a2.w!==undefined&&a2.w!==null)bits.push('<span class="n">'+fmtW(a2.w)+' кг</span>');
-        if(a2.s)bits.push('<span class="n">'+esc(String(a2.s))+'</span> подх.');
-        if(a2.r)bits.push('<span class="n">'+esc(String(a2.r))+'</span> повт.');
-        ab+='<div class="advline" style="margin-left:0"><b style="color:var(--adv)">'+esc(EX[k].name)+'</b><br>'+
-            (bits.length?bits.join(' · ')+'. ':'')+esc(a2.b||'')+'</div>';
-      });
-    }
-  }else{
-    ab+='<p class="note-s">Разбора пока нет. Он появляется, когда я кладу advice.json в твой репозиторий данных — после этого нажми «Обновить».</p>';
-  }
-  ab+='<div class="btns" style="margin-top:12px"><button class="sm" data-a="advget">Обновить разбор</button></div>';
-  h+=sec('adv','Разбор от Claude',A?esc(A.at||''):'пока нет',ab);
-
   /* ---- техническое: синхронизация и данные ---- */
   var sst=S.sync.err?'er':(S.sync.at?'ok':'no');
   var smsg=S.sync.err?('Последняя ошибка: '+esc(S.sync.err))
@@ -2088,7 +2169,9 @@ function renderStat(){
      '<input class="txt" id="sytok" type="password" value="'+esc(S.sync.tok)+'" placeholder="github_pat_..." autocapitalize="off" autocorrect="off">';
   tb2+='<div class="btns"><button class="sm" data-a="sysave">Сохранить</button>'+
      '<button class="sm" data-a="syup">Выгрузить сейчас</button>'+
-     '<button class="sm" data-a="sydown">Загрузить с GitHub</button></div>';
+     '<button class="sm" data-a="sydown">Загрузить с GitHub</button>'+
+     '<button class="sm" data-a="advget">Обновить разбор</button></div>'+
+     '<p class="note-s">Разбор подтягивается сам при запуске и показывается на главной. Кнопка — на случай, если нужно прямо сейчас.</p>';
   tb2+='<h4>Данные</h4><p class="sub">Локальная копия на случай, если синхронизация не настроена. Токен в выгрузку не попадает.</p>'+
      '<div class="btns"><button class="sm" data-a="exp">Копия (JSON)</button><button class="sm" data-a="expcsv">Таблица (CSV)</button>'+
      '<button class="sm" data-a="expai">Отчёт для Claude</button><button class="sm" data-a="imp">Восстановить</button></div>'+
@@ -2378,7 +2461,7 @@ store.get('gym:v2').then(function(d){
   if(d.sync)S.sync=d.sync;
   S.backupAt=d.backupAt||0;
   if(d.gain&&GAIN[d.gain])S.gain=d.gain;
-  S.advice=d.advice||null;S.advSeen=d.advSeen||'';
+  S.advice=d.advice||null;S.advSeen=d.advSeen||'';S.dismissed=d.dismissed||{};
   boot(false);
 });
 function boot(migrated){
@@ -2394,6 +2477,7 @@ function boot(migrated){
   }
   renderWork();
   paintRest();
+  paintNet(true);
   if(S.active){
     setClock(true);wakeOn();
     toast('Тренировка восстановлена: '+Math.round(bumpElapsed()/60000)+' мин'+(isPaused()?' (пауза)':''));
