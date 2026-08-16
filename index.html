@@ -494,7 +494,15 @@ el_grip:{name:'Сжатие кистевого эспандера',grp:'Локо
  hint:'Мягкий мяч или эспандер. Сжатие 2 секунды, отпускание 2 секунды.',
  how:['Возьми мяч или эспандер в руку, локоть согнут, предплечье лежит на бедре.','Сжимай 2 секунды до умеренного усилия, не до максимума.','Держи 2 секунды и медленно отпускай.','Вес в поле слева не нужен — пиши 0, если работаешь мячом.'],
  watch:['Запястье остаётся прямым, не сгибается при сжатии.','Боли быть не должно вообще — это восстановительная работа на кровоток.'],
- note:'Улучшает кровоток в зоне прикрепления сухожилия. Можно делать хоть каждый день, в том числе в дни без тренировок.'}
+ note:'Улучшает кровоток в зоне прикрепления сухожилия. Можно делать хоть каждый день, в том числе в дни без тренировок.'},
+
+/* --- АРХИВ ---
+   Упражнение убрано из плана, но осталось в старых записях. Без карточки
+   здесь его подходы молча выпадали из статистики, CSV и отчёта. */
+h_ham:{name:'Задняя поверхность бедра (архив)',grp:'Мобильность',noW:1,unit:'сек',repdef:45,repstep:15,legacy:1,rest:'без паузы',
+ hint:'Убрано из плана — заменено на «Фигура 4 лёжа». Запись сохранена, чтобы прошлые тренировки не пропадали из статистики.',
+ how:['Это упражнение больше не входит в план.','В блоке мобильности его место заняла «Фигура 4 лёжа» — она безопаснее для поясницы при протрузиях.'],
+ watch:[]}
 };
 
 /* Время отдыха, сек. Везде взято минимальное значение диапазона. */
@@ -710,14 +718,16 @@ function nutrition(wk){
   var base=Math.round(bmr(w)*1.2);
   var stepK=Math.round(Math.max(0,steps-2000)*0.0004*w);
   var tdee=base+stepK+perDay;
-  /* Фактический темп веса за последние замеры */
+  /* Фактический темп веса. Две точки за неделю — это шум: вода и гликоген
+     двигают вес на ±1,5 кг за сутки. Поэтому темп считаем только от трёх
+     взвешиваний и минимум двух недель, иначе избыток дёргался бы впустую. */
   var wp=S.body.filter(function(x){return x.w&&new Date(x.d).getTime()<wk+7*864e5;})
                .sort(function(a,b){return a.d<b.d?-1:1;});
-  var rate=null;
-  if(wp.length>=2){
+  var rate=null,rateWks=0;
+  if(wp.length>=3){
     var a=wp[wp.length-1],b=wp.length>=5?wp[wp.length-5]:wp[0];
-    var weeks=Math.max(1,(new Date(a.d)-new Date(b.d))/6048e5);
-    rate=Math.round((a.w-b.w)/weeks*100)/100;
+    var weeks=(new Date(a.d)-new Date(b.d))/6048e5;
+    if(weeks>=2){rate=Math.round((a.w-b.w)/weeks*100)/100;rateWks=Math.round(weeks*10)/10;}
   }
   var surplus=250,why='цель +0,2 кг в неделю — это верхняя граница, при которой набор идёт мышцами, а не жиром';
   if(rate!==null){
@@ -731,13 +741,13 @@ function nutrition(wk){
   var carb=Math.max(0,Math.round((target-prot*4-fat*9)/4));
   return{w:w,bmr:bmr(w),base:base,steps:steps,stepsRaw:stepsRaw,padSteps:padSteps,stepK:stepK,
          train:train,perDay:perDay,tdee:tdee,surplus:surplus,why:why,target:target,
-         rate:rate,prot:prot,fat:fat,carb:carb};
+         rate:rate,rateWks:rateWks,weighIns:wp.length,prot:prot,fat:fat,carb:carb};
 }
 function nutriAdvice(N,wk){
   var t=[],back=wk-4*7*864e5;
   if(!N.stepsRaw) t.push('Шаги за эту неделю не заполнены, поэтому расход занижен. Впиши среднее из часов во вкладке «Тело» — цифра сразу станет точной.');
-  if(N.rate===null) t.push('Нужно хотя бы два взвешивания, чтобы поймать темп. Пока считаю по цели +0,2 кг в неделю.');
-  else t.push('Фактический темп: '+(N.rate>=0?'+':'')+fmtW(N.rate)+' кг в неделю при цели +0,2.');
+  if(N.rate===null) t.push('Темп веса пока не считаю: нужно три взвешивания и не меньше двух недель между первым и последним. Сейчас их '+N.weighIns+'. Две точки за неделю — это вода и гликоген, а не набор, и подстраивать под них калории смысла нет. Пока держу избыток по умолчанию.');
+  else t.push('Фактический темп: '+(N.rate>=0?'+':'')+fmtW(N.rate)+' кг в неделю при цели +0,2 (по '+N.weighIns+' взвешиваниям за '+fmtW(N.rateWks)+' нед).');
 
   var wa1=bodyAt(wk,'wa'),wa0=bodyAt(back,'wa'),bi1=bodyAt(wk,'bi'),bi0=bodyAt(back,'bi');
   if(wa1&&wa0&&bi1&&bi0){
@@ -1441,7 +1451,7 @@ function openSwap(itemId){
   var cur=exIdFor({id:itemId}),m=EX[cur];
   var same=[],other=[];
   Object.keys(EX).forEach(function(k){
-    if(k===cur)return;
+    if(k===cur||EX[k].legacy)return;
     /* упражнение без веса вместо силового — почти всегда ошибка, не предлагаем */
     if(EX[k].noW&&!m.noW)return;
     (EX[k].grp===m.grp?same:other).push(k);
