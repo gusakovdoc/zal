@@ -1166,25 +1166,54 @@ function swipeEnd(){
 document.addEventListener('pointerup',swipeEnd);
 document.addEventListener('pointercancel',swipeEnd);
 
-/* ============ НЕТ СЕТИ ============ */
-function offline(){return typeof navigator.onLine==='boolean'&&!navigator.onLine;}
-function paintNet(quiet){
+/* ============ НЕТ СЕТИ ============
+   navigator.onLine доверять нельзя: он говорит только о том, что есть сетевой
+   интерфейс. Wi-Fi без интернета, мобильный без оплаты, самолётный режим на
+   одном из интерфейсов — во всех этих случаях он остаётся true. Поэтому сеть
+   проверяем реальным запросом, а события online/offline берём как подсказку. */
+var netOk=true,netTimer=null,netBusy=false;
+function offline(){return !netOk;}
+function paintNetBar(){
   var b=document.getElementById('offbar');
-  if(offline()){
-    b.innerHTML='<b>Нет сети.</b> Тренировка пишется на телефон, в облако уедет сама, когда связь вернётся.';
-    b.hidden=false;
-    if(!quiet)cloudToast(false,'Нет сети — работаем офлайн');
+  if(!b)return;
+  b.innerHTML='<b>Нет сети.</b> Тренировка пишется на телефон, в облако уедет сама, когда связь вернётся.';
+  b.hidden=netOk;
+}
+function setNet(ok,announce){
+  var was=netOk;
+  netOk=!!ok;
+  paintNetBar();
+  if(was===netOk||!announce)return;
+  if(netOk){
+    cloudToast(true,'Сеть вернулась');
+    /* догоняем то, что не уехало, пока связи не было */
+    if(cloudReady()&&S.sync.err)setTimeout(function(){cloudPush(true);},600);
   }else{
-    b.hidden=true;
+    cloudToast(false,'Нет сети — тренировка пишется на телефон');
   }
 }
-window.addEventListener('offline',function(){paintNet(false);});
-window.addEventListener('online',function(){
-  paintNet(true);
-  cloudToast(true,'Сеть вернулась');
-  /* догоняем то, что не уехало, пока связи не было */
-  if(cloudReady()&&S.sync.err)setTimeout(function(){cloudPush(true);},600);
-});
+function probeNet(announce){
+  if(netBusy)return Promise.resolve(netOk);
+  /* если интерфейса нет вовсе — это надёжный признак, запрос не нужен */
+  if(typeof navigator.onLine==='boolean'&&!navigator.onLine){setNet(false,announce);return Promise.resolve(false);}
+  netBusy=true;
+  /* net=1 — метка для service worker: такие запросы он пропускает мимо кэша,
+     иначе проверка всегда отвечала бы «есть сеть» из кэша */
+  return fetch('manifest.json?net=1&t='+Date.now(),{cache:'no-store'})
+    .then(function(r){netBusy=false;setNet(!!r&&r.ok,announce);return netOk;})
+    .catch(function(){netBusy=false;setNet(false,announce);return false;});
+}
+window.addEventListener('offline',function(){setNet(false,true);});
+window.addEventListener('online',function(){probeNet(true);});
+/* Раз в 20 секунд, пока вкладка на экране: обрыв должен замечаться сам,
+   без ожидания следующей выгрузки в облако. */
+function netWatch(){
+  clearInterval(netTimer);
+  netTimer=setInterval(function(){
+    if(document.hidden)return;
+    probeNet(true);
+  },20000);
+}
 
 /* ============ ЭКРАН НЕ ГАСНЕТ ============ */
 var wlock=null;
@@ -1610,6 +1639,8 @@ document.addEventListener('visibilitychange',function(){
   /* блокировка экрана снимает wake lock — возвращаем его при возврате во вкладку */
   else{setClock(true);wakeOn();}
 });
+/* возврат во вкладку — сразу перепроверяем сеть, не дожидаясь тика */
+document.addEventListener('visibilitychange',function(){if(!document.hidden)probeNet(true);});
 document.getElementById('clock').addEventListener('click',function(){
   if(!S.active)return;
   if(S.active.pSince){
@@ -2097,7 +2128,7 @@ function renderStat(){
   nb+='<p class="note-s">'+N.why.charAt(0).toUpperCase()+N.why.slice(1)+'.</p>';
   nutriAdvice(N,nWk).forEach(function(t){nb+='<p class="note-s">— '+t+'</p>';});
   nb+='</div>';
-  h+=sec('nut','Как посчитано','расход '+N.tdee+' + запас '+N.surplus,nb);
+  h+=sec('nut','Как посчитано','расход '+N.tdeeUse+(N.tdeeReal!==null?' по факту':'')+' + запас '+N.surplus,nb);
 
   /* группы */
   var gN=groupWeek(tw),gP=groupWeek(pw);
@@ -2246,6 +2277,7 @@ function cloudPush(quiet){
         throw new Error(m);
       });
       S.sync.at=Date.now();S.sync.err='';S.backupAt=Date.now();save();
+      setNet(true,false);
       cloudToast(true,'Данные сохранены в облаке');
       if(!quiet)renderStatIfOpen();
       return true;
@@ -2253,6 +2285,8 @@ function cloudPush(quiet){
     .catch(function(e){
       var m=netMsg(e);
       S.sync.err=m;save();
+      /* неудачная выгрузка — самое надёжное свидетельство обрыва */
+      if(m==='нет сети')setNet(false,false);
       cloudToast(false,'Не сохранилось в облако: '+m+'. На телефоне данные целы.');
       if(!quiet)renderStatIfOpen();
       return false;
@@ -2477,7 +2511,7 @@ function boot(migrated){
   }
   renderWork();
   paintRest();
-  paintNet(true);
+  paintNetBar();probeNet(false);netWatch();
   if(S.active){
     setClock(true);wakeOn();
     toast('Тренировка восстановлена: '+Math.round(bumpElapsed()/60000)+' мин'+(isPaused()?' (пауза)':''));

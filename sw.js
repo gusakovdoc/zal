@@ -1,6 +1,6 @@
 /* Офлайн-режим. Версию поднимать при каждом изменении набора файлов —
    иначе старый кэш переживёт обновление. */
-var V='zal-v1';
+var V='zal-v2';
 var CORE=['./','./index.html','./manifest.json','./icon-192.png','./icon-512.png'];
 
 self.addEventListener('install',function(e){
@@ -27,6 +27,8 @@ self.addEventListener('fetch',function(e){
   try{u=new URL(r.url);}catch(err){return;}
   /* Синхронизация всегда идёт в сеть: закэшированный ответ означал бы потерю данных */
   if(u.hostname==='api.github.com')return;
+  /* Проба связи тоже мимо кэша — иначе она всегда отвечала бы «сеть есть» */
+  if(u.searchParams.get('net')==='1')return;
 
   /* Страница: сначала сеть, чтобы обновление приложения доезжало сразу,
      кэш — только когда сети нет */
