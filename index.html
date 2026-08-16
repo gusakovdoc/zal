@@ -207,6 +207,53 @@ textarea.small{height:74px}
 .toast.on{opacity:1}
 .toast.pr{background:var(--ok);color:#0F1215;font-weight:600}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+
+/* выполнено за неделю, слева на карточке выбора */
+.pick .dn.fr{font-size:19px;width:44px;text-align:center;color:var(--dat)}
+.pick.home .dn.fr{font-size:19px;width:44px;color:var(--dat)}
+.pick .dn.fr.ok{color:var(--ok)}
+.pick .dn.fr.miss{color:var(--warn)}
+.pick .dn.fr.zero{color:var(--stop)}
+
+/* свёрнутое упражнение */
+.exfold{display:flex;width:100%;background:none;border:0;padding:11px 13px;text-align:left;gap:11px;align-items:center}
+.exfold .exn{padding-top:0}
+.exfold .ext h3{margin:0 0 2px}
+.exfold .fsum{font-family:"IBM Plex Mono",monospace;font-size:12.5px;color:var(--mut);display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.foldi{color:var(--dim);font-size:13px;flex:0 0 auto}
+
+/* запас повторов */
+.rirbar{display:flex;align-items:center;gap:5px;padding:1px 4px 6px 29px;font-size:12px;color:var(--dim)}
+.rirbar button{background:var(--surf);border:1px solid var(--line);border-radius:3px;width:27px;height:24px;padding:0;font-family:"IBM Plex Mono",monospace;font-size:12.5px;color:var(--mut);line-height:1}
+.rirbar button.on{background:var(--dat);border-color:var(--dat);color:#0F1215;font-weight:600}
+
+.phint{background:rgba(78,169,123,.10);border-left:2px solid var(--ok);margin:0 13px 9px 44px;padding:6px 9px;font-size:13px;color:var(--ok);border-radius:0 3px 3px 0}
+.pwarn{background:var(--warn-bg);border-left:2px solid var(--warn);margin:0 13px 9px 44px;padding:6px 9px;font-size:13px;color:var(--warn);border-radius:0 3px 3px 0}
+
+/* выбор недели в календаре */
+.calrow.sel{background:rgba(91,157,217,.13);border-radius:4px}
+.wst{cursor:pointer}
+.wbox{background:var(--card);border:1px solid var(--dat);border-radius:4px;padding:12px 13px;margin-bottom:12px}
+.wbox h5{font-family:"Barlow Condensed",sans-serif;font-weight:700;font-size:18px;margin:0 0 8px;color:var(--dat)}
+.kv{display:flex;justify-content:space-between;gap:10px;padding:5px 0;border-bottom:1px solid var(--line);font-size:14px}
+.kv:last-of-type{border-bottom:0}
+.kv b{font-family:"IBM Plex Mono",monospace;font-weight:600}
+.kv.tot{border-top:1px solid var(--line);margin-top:4px;padding-top:8px}
+.kv.tot b{color:var(--ok);font-size:16px}
+.note-s{font-size:13px;color:var(--mut);line-height:1.45;margin:9px 0 0}
+
+/* питание */
+.macro{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:10px 0 4px}
+.macro div{background:var(--surf);border:1px solid var(--line);border-radius:4px;padding:9px 8px;text-align:center}
+.macro b{display:block;font-family:"IBM Plex Mono",monospace;font-weight:600;font-size:18px;color:var(--dat)}
+.macro span{font-size:11.5px;color:var(--mut)}
+.tgtbig{font-family:"IBM Plex Mono",monospace;font-weight:600;font-size:32px;color:var(--ok);line-height:1.1}
+
+/* синхронизация */
+.syncst{font-size:13px;padding:8px 11px;border-radius:4px;margin-bottom:10px;line-height:1.45}
+.syncst.ok{background:var(--ok-bg);color:var(--ok);border-left:3px solid var(--ok)}
+.syncst.no{background:var(--surf);color:var(--mut);border-left:3px solid var(--line)}
+.syncst.er{background:var(--stop-bg);color:var(--stop);border-left:3px solid var(--stop)}
 </style>
 </head>
 <body>
@@ -412,17 +459,53 @@ h_hammer:{name:'Молотковые сгибания',grp:'Бицепс',start:
  hint:'Большой палец вверх, гантель строго вертикально.',
  how:['Позиция та же — спиной к стене, локоть прижат.','Хват нейтральный: большой палец вверх, ладонь к бедру.','Держи гантель вертикально всю амплитуду.','Опускание 3 сек, чередуй руки.'],
  watch:['Кисть не заваливается и не проворачивается.'],
- note:'Упражнение на толщину руки. Гнаться за весом смысла нет.'}
+ note:'Упражнение на толщину руки. Гнаться за весом смысла нет.'},
+
+/* --- ДОМ: ТРИЦЕПС --- */
+h_tri_oh:{name:'Разгибание из-за головы с гантелью',grp:'Трицепс',start:12,step:2,repdef:12,e1:1,noIdx:1,rest:'60 сек',
+ hint:'Локти у головы и неподвижны. Двигается только предплечье.',
+ how:['Сядь или встань, рёбра вниз, пресс включён.','Возьми одну гантель двумя руками за верхний блин и подними над головой.','Опускай за голову до отчётливого растяжения трицепса, локти держи узко.','Внизу пауза 1 сек. Разгибай без рывка, вверху локти не блокируй.'],
+ watch:['Локти разъезжаются в стороны — вес великоват.','Поясница уходит в прогиб — значит корпус компенсирует.'],
+ note:'Растянутая позиция — главный стимул для длинной головки, самой крупной из трёх. Опускай 3 секунды.'},
+h_kick:{name:'Обратные разгибания (кикбэк)',grp:'Трицепс',start:8,step:2,hand:1,repdef:14,e1:1,noIdx:1,rest:'60 сек',
+ hint:'Плечо параллельно полу и неподвижно. Работает только предплечье.',
+ how:['Наклонись вперёд почти до параллели корпуса с полом, свободной рукой упрись в стену или бедро.','Плечо рабочей руки прижми к боку и подними до параллели с полом.','Разгибай руку назад до полного выпрямления, в конце короткая пауза и дожим.','Опускай 3 секунды, плечо не роняй.'],
+ watch:['Плечо опускается — движение превратилось в мах.','Корпус разворачивается вслед за рукой.'],
+ note:'Пиковое сокращение — дополняет разгибание из-за головы с другой стороны амплитуды. Вес тут маленький, это нормально.'},
+
+/* --- ДОМ: ЛОКОТЬ, эпикондилит --- */
+el_ecc:{name:'Эксцентрическое разгибание запястья',grp:'Локоть',start:1,step:.5,hand:1,repdef:15,rest:'60 сек',
+ hint:'Главное упражнение протокола. Вверх помогаешь второй рукой, вниз — 4 секунды сам.',
+ how:['Сядь, предплечье положи на бедро ладонью вниз, кисть свисает за колено.','Лёгкая гантель в рабочей руке. Второй рукой подними кисть в верхнее положение.','Убери помогающую руку и опускай кисть вниз 4 секунды, сопротивляясь весу.','Снова подними второй рукой. Всё усилие только на опускании.'],
+ watch:['Предплечье лежит на бедре и не отрывается.','Скорость опускания важнее веса — 4 секунды, не быстрее.'],
+ stop:'Острая боль в наружном надмыщелке — прекрати. Тупое тянущее ощущение во время работы допустимо и ожидаемо.',
+ note:'Эксцентрика — доказанное ядро лечения латерального эпикондилита. Начни с 1 кг, добавляй по 0,5 кг не чаще раза в две недели. Эффект появляется на 4–6 неделе, не раньше.'},
+el_sup:{name:'Супинация и пронация с гантелью',grp:'Локоть',start:2,step:.5,hand:1,repdef:15,rest:'45 сек',
+ hint:'Держи гантель за один конец, как молоток. Вращай медленно.',
+ how:['Предплечье на бедре, кисть свисает, локоть согнут под 90°.','Возьми гантель за один конец — второй конец перевешивает.','Медленно поверни ладонь вверх до упора, пауза 1 сек.','Так же медленно поверни ладонью вниз. Одно повторение — это оба направления.'],
+ watch:['Двигается только предплечье, плечо прижато к боку.','Если тяжело — перехвати гантель ближе к центру, рычаг станет короче.'],
+ note:'Работает супинатор — вторая по частоте причина боли в наружном локте после разгибателей.'},
+el_stretch:{name:'Растяжка разгибателей предплечья',grp:'Локоть',noW:1,unit:'сек',repdef:30,repstep:10,rest:'без паузы',
+ hint:'Рука прямая, ладонь от себя вниз. Тянуть до натяжения, не до боли.',
+ how:['Вытяни больную руку вперёд, локоть полностью выпрямлен.','Опусти кисть вниз, пальцы смотрят в пол.','Второй рукой мягко дотяни кисть к себе, до чувства натяжения по верху предплечья.','Держи 30 секунд ровно, не пружинь.'],
+ watch:['Локоть остаётся прямым — согнутый локоть убирает всю растяжку.','Плечо не поднимается к уху.'],
+ note:'Делай после эксцентрики, а не до неё. И отдельно 2–3 раза в течение дня — это ускоряет восстановление.'},
+el_grip:{name:'Сжатие кистевого эспандера',grp:'Локоть',start:0,step:1,hand:1,repdef:20,rest:'45 сек',
+ hint:'Мягкий мяч или эспандер. Сжатие 2 секунды, отпускание 2 секунды.',
+ how:['Возьми мяч или эспандер в руку, локоть согнут, предплечье лежит на бедре.','Сжимай 2 секунды до умеренного усилия, не до максимума.','Держи 2 секунды и медленно отпускай.','Вес в поле слева не нужен — пиши 0, если работаешь мячом.'],
+ watch:['Запястье остаётся прямым, не сгибается при сжатии.','Боли быть не должно вообще — это восстановительная работа на кровоток.'],
+ note:'Улучшает кровоток в зоне прикрепления сухожилия. Можно делать хоть каждый день, в том числе в дни без тренировок.'}
 };
 
 /* Время отдыха, сек. Везде взято минимальное значение диапазона. */
 var REST={
-incline_db:120,cable_fly:60,bb_curl:90,pulldown:120,db_ohp:120,leg_press:120,
-tri_oh:90,lat_raise:60,farmer:90,bench:180,pullup:120,incline_curl:90,
+incline_db:120,cable_fly:90,bb_curl:90,pulldown:120,db_ohp:120,leg_press:120,
+tri_oh:90,lat_raise:60,farmer:90,bench:120,pullup:120,incline_curl:90,
 leg_curl:90,rear_delt:60,hanging_leg:60,pallof:45,
 h_hip:0,h_tspine:0,h_book:0,h_door:0,h_glute:0,
 h_deadbug:45,h_birddog:45,h_splank:45,h_bridge:45,h_wheel:90,
-h_pushup:90,h_curl:60,h_hammer:60};
+h_pushup:90,h_curl:60,h_hammer:60,h_tri_oh:60,h_kick:60,
+el_ecc:60,el_sup:45,el_stretch:0,el_grip:45};
 function restLabel(s){
   if(!s)return 'без паузы';
   return (s>=60&&s%60===0)?(s/60)+' мин':s+' сек';
@@ -456,12 +539,17 @@ core:{t:'Кор и спина',type:'home',mins:7,ex:[
  {id:'h_splank',sets:3,reps:'40 сек × сторона',rd:40},{id:'h_bridge',sets:2,reps:'15',rd:15}]},
 wheel:{t:'Ролик',type:'home',mins:5,ex:[
  {id:'h_wheel',sets:3,reps:'8–12',rd:8}]},
-prio:{t:'Приоритет: грудь и бицепс',type:'home',mins:15,ex:[
+prio:{t:'Приоритет: грудь, бицепс, трицепс',type:'home',mins:22,ex:[
  {id:'h_pushup',sets:3,reps:'10–15',rd:12},{id:'h_curl',sets:3,reps:'10–15 × рука',rd:12},
- {id:'h_hammer',sets:2,reps:'12–15 × рука',rd:13}]}
+ {id:'h_hammer',sets:2,reps:'12–15 × рука',rd:13},{id:'h_tri_oh',sets:3,reps:'10–15',rd:12},
+ {id:'h_kick',sets:2,reps:'12–15 × рука',rd:14}]},
+elbow:{t:'Локоть: восстановление',type:'home',mins:10,ex:[
+ {id:'el_ecc',sets:3,reps:'15 × рука',rd:15},{id:'el_sup',sets:3,reps:'15 × рука',rd:15},
+ {id:'el_grip',sets:3,reps:'20 × рука',rd:20},{id:'el_stretch',sets:3,reps:'30 сек × рука',rd:30}]},
+padel:{t:'Падел',type:'padel',mins:90,ex:[]}
 };
-var HOME_KEYS=['mob','core','wheel','prio'];
-var GROUPS=['Грудь','Спина','Бицепс','Трицепс','Дельты','Ноги','Пресс','Кор'];
+var HOME_KEYS=['mob','core','wheel','prio','elbow'];
+var GROUPS=['Грудь','Спина','Бицепс','Трицепс','Дельты','Ноги','Пресс','Кор','Локоть'];
 var WD=['Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
 var MN=['январь','февраль','март','апрель','май','июнь','июль','август','сентябрь','октябрь','ноябрь','декабрь'];
 
@@ -473,7 +561,8 @@ var BODY=[
 {k:'wa',n:'Талия',u:'см',s:.5,h:'на уровне пупка, на выдохе, расслаблена, сзади чуть выше'},
 {k:'ch',n:'Грудь',u:'см',s:.5,h:'по сосковой линии, на выдохе, руки опущены'},
 {k:'k1',n:'Калипер, бок',u:'мм',s:.5,h:'2 см выше подвздошной справа'},
-{k:'k2',n:'Калипер, живот',u:'мм',s:.5,h:'2 см слева от пупка'}];
+{k:'k2',n:'Калипер, живот',u:'мм',s:.5,h:'2 см слева от пупка'},
+{k:'st',n:'Шаги в день',u:'шт',s:500,h:'среднее за неделю из часов — падел вычтется автоматически'}];
 
 var FACTS=[
 'Мышцы за две недели без зала практически не теряются. Падает гликоген, вода и рабочие веса на 5–10% — это возвращается за пару тренировок.',
@@ -498,10 +587,16 @@ var FACTS=[
 'Растяжка перед подходами временно снижает силу. Мобильность лучше делать отдельно, в рабочие перерывы.'];
 
 /* ============ СОСТОЯНИЕ ============ */
-var S={active:null,log:[],body:[],custom:{},setsOv:{},plan:{gym:2,mob:5,core:3,wheel:2,prio:2}};
-var tick=null,calM=null;
+var PLAN0={gym:2,mob:5,core:3,wheel:2,prio:2,elbow:5,padel:2};
+/* Урезанная неделя: минимум, который удерживает результат, когда всё пошло не так */
+var PLANMIN={gym:1,mob:2,core:1,wheel:0,prio:0,elbow:5,padel:0};
+var S={active:null,log:[],body:[],custom:{},setsOv:{},plan:copy(PLAN0),
+       planHist:{},bad:{},sync:{tok:'',repo:'',path:'data.json',at:0,err:''},backupAt:0};
+var tick=null,calM=null,statWk=null;
+function copy(o){var r={};Object.keys(o).forEach(function(k){r[k]=o[k];});return r;}
 
-function save(){store.set('gym:v2',{active:S.active,log:S.log,body:S.body,custom:S.custom,setsOv:S.setsOv,plan:S.plan});}
+function save(){store.set('gym:v2',{active:S.active,log:S.log,body:S.body,custom:S.custom,setsOv:S.setsOv,
+  plan:S.plan,planHist:S.planHist,bad:S.bad,sync:S.sync,backupAt:S.backupAt});}
 function toast(m,pr){
   var t=document.getElementById('toast');
   t.textContent=m;t.className='toast on'+(pr?' pr':'');
@@ -550,6 +645,147 @@ function planDone(k,wk){
     return x.day===k;
   }).length;
 }
+function typeOf(x){return x.type||(DAYS[x.day]?DAYS[x.day].type:'home');}
+function homeNeed(p){return p.mob+p.core+p.wheel+p.prio+p.elbow;}
+/* План недели замораживается в момент, когда в эту неделю пишется тренировка.
+   Поэтому смена плана сегодня не переоценивает задним числом прошлые недели. */
+function planFor(wk){
+  if(S.bad[wk])return PLANMIN;
+  if(S.planHist[wk])return S.planHist[wk];
+  return S.plan;
+}
+function freezePlan(wk){
+  var p=copy(S.plan);
+  Object.keys(PLAN0).forEach(function(k){if(p[k]===undefined)p[k]=PLAN0[k];});
+  S.planHist[wk]=p;
+}
+
+/* ---- Калории ----
+   MET — метаболический эквивалент: во сколько раз расход выше покоя.
+   ккал = MET × вес × часы. Значения из компендиума Ainsworth. */
+var MET={A:5,B:5,mob:2.3,core:3.5,wheel:4,prio:4.5,elbow:2,padel:6.5};
+function minsOf(x){return Math.max(1,Math.round((x.f-x.s)/60000));}
+function metKcal(dayKey,mins,w){return Math.round((MET[dayKey]||3.5)*(w||bodyW())*(mins/60));}
+/* Нагрудный пульсометр систематически завышает падел: между розыгрышами пульс
+   остаётся высоким, а потребление кислорода за ним не идёт, и прибор считает
+   эту паузу нагрузкой. Практическая поправка для ракеточных видов — около 0,78.
+   Результат подстраховываем физиологической оценкой по MET. */
+function padelKcal(raw,mins,w){
+  w=w||bodyW();
+  var met=Math.round(6.5*w*(mins/60));
+  if(!raw)return met;
+  var c=Math.round(raw*0.78),lo=Math.round(met*0.7),hi=Math.round(met*1.5);
+  return c<lo?lo:(c>hi?hi:c);
+}
+function kcalOf(x){
+  var t=typeOf(x),mins=minsOf(x);
+  if(t==='padel')return padelKcal(x.kcalRaw||0,mins,x.bw);
+  if(x.kcal)return x.kcal;
+  return metKcal(x.day,mins,x.bw);
+}
+function weekKcal(wk){
+  return S.log.filter(function(x){return weekKey(x.s)===wk;}).reduce(function(a,x){return a+kcalOf(x);},0);
+}
+/* Последнее значение поля тела на конец недели wk */
+function bodyAt(wk,key){
+  var end=wk+7*864e5;
+  var r=S.body.filter(function(x){return new Date(x.d).getTime()<end&&x[key]!==undefined&&x[key]!=='';})
+              .sort(function(a,b){return a.d<b.d?-1:1;});
+  return r.length?r[r.length-1][key]:null;
+}
+/* ---- Питание ---- */
+var HGT=180,AGE=35,KCAL_PER_KG=7700;
+function bmr(w){return Math.round(10*w+6.25*HGT-5*AGE+5);}
+function nutrition(wk){
+  var w=bodyAt(wk,'w')||bodyW();
+  var ss=S.log.filter(function(x){return weekKey(x.s)===wk;});
+  var train=ss.reduce(function(a,x){return a+kcalOf(x);},0);
+  var perDay=Math.round(train/7);
+  /* Шаги, набитые на корте, уже посчитаны в калориях падела — вычитаем,
+     иначе один и тот же час игры учтётся дважды. ~3500 шагов за час игры. */
+  var padMin=ss.filter(function(x){return typeOf(x)==='padel';}).reduce(function(a,x){return a+minsOf(x);},0);
+  var stepsRaw=bodyAt(wk,'st')||0;
+  var padSteps=Math.round(padMin/60*3500/7);
+  var steps=Math.max(0,stepsRaw-padSteps);
+  var base=Math.round(bmr(w)*1.2);
+  var stepK=Math.round(Math.max(0,steps-2000)*0.0004*w);
+  var tdee=base+stepK+perDay;
+  /* Фактический темп веса за последние замеры */
+  var wp=S.body.filter(function(x){return x.w&&new Date(x.d).getTime()<wk+7*864e5;})
+               .sort(function(a,b){return a.d<b.d?-1:1;});
+  var rate=null;
+  if(wp.length>=2){
+    var a=wp[wp.length-1],b=wp.length>=5?wp[wp.length-5]:wp[0];
+    var weeks=Math.max(1,(new Date(a.d)-new Date(b.d))/6048e5);
+    rate=Math.round((a.w-b.w)/weeks*100)/100;
+  }
+  var surplus=250,why='цель +0,2 кг в неделю — это верхняя граница, при которой набор идёт мышцами, а не жиром';
+  if(rate!==null){
+    if(rate>0.35){surplus=100;why='вес растёт быстрее 0,35 кг в неделю — избыток срезан, лишнее идёт в жир';}
+    else if(rate>0.25){surplus=180;why='темп чуть выше цели — небольшой минус к избытку';}
+    else if(rate<0.05){surplus=400;why='вес практически стоит — избытка не хватает, добавляем';}
+    else if(rate<0.15){surplus=320;why='темп ниже цели — избыток увеличен';}
+  }
+  var target=tdee+surplus;
+  var prot=Math.round(1.8*w),fat=Math.round(0.9*w);
+  var carb=Math.max(0,Math.round((target-prot*4-fat*9)/4));
+  return{w:w,bmr:bmr(w),base:base,steps:steps,stepsRaw:stepsRaw,padSteps:padSteps,stepK:stepK,
+         train:train,perDay:perDay,tdee:tdee,surplus:surplus,why:why,target:target,
+         rate:rate,prot:prot,fat:fat,carb:carb};
+}
+function nutriAdvice(N,wk){
+  var t=[],back=wk-4*7*864e5;
+  if(!N.stepsRaw) t.push('Шаги за эту неделю не заполнены, поэтому расход занижен. Впиши среднее из часов во вкладке «Тело» — цифра сразу станет точной.');
+  if(N.rate===null) t.push('Нужно хотя бы два взвешивания, чтобы поймать темп. Пока считаю по цели +0,2 кг в неделю.');
+  else t.push('Фактический темп: '+(N.rate>=0?'+':'')+fmtW(N.rate)+' кг в неделю при цели +0,2.');
+
+  var wa1=bodyAt(wk,'wa'),wa0=bodyAt(back,'wa'),bi1=bodyAt(wk,'bi'),bi0=bodyAt(back,'bi');
+  if(wa1&&wa0&&bi1&&bi0){
+    var dwa=Math.round((wa1-wa0)*10)/10,dbi=Math.round((bi1-bi0)*10)/10;
+    if(dwa>0.5&&dwa>dbi*1.5)
+      t.push('За месяц талия '+(dwa>0?'+':'')+fmtW(dwa)+' см против бицепса '+(dbi>0?'+':'')+fmtW(dbi)+' см. Избыток великоват — сними 150–200 ккал, набор пошёл не туда.');
+    else if(dbi>0.3&&dwa<=0.3)
+      t.push('За месяц бицепс '+(dbi>0?'+':'')+fmtW(dbi)+' см при почти стоящей талии. Это ровно тот случай, когда менять ничего не надо.');
+  }
+  var bf1=bodyAt(wk,'bf'),bf0=bodyAt(back,'bf');
+  if(bf1&&bf0&&bf1-bf0>1) t.push('Процент жира за месяц +'+fmtW(Math.round((bf1-bf0)*10)/10)+'. Для набора это много — урежь избыток примерно вдвое.');
+
+  t.push('Белок '+N.prot+' г — это 1,8 г на кг, выше прироста не даёт. Жиры '+N.fat+' г — нижняя граница, ниже падают гормоны. Остальное углеводами: их проще всего добрать.');
+  if(N.perDay>400) t.push('Тренировочный расход высокий: '+N.perDay+' ккал в день в среднем. В дни падела добирай сверху 300–400 ккал углеводами, иначе набор встанет на месте.');
+  return t;
+}
+
+/* Верхняя граница диапазона повторов из строки плана: «8–12» → 12 */
+function repTop(reps){var m=String(reps).match(/(\d+)\s*[–—-]\s*(\d+)/);return m?+m[2]:0;}
+/* Двойная прогрессия: все рабочие подходы на верхней границе одним весом — пора добавлять */
+function progHint(item,m,sArr,nSets){
+  if(m.noW||m.unit==='сек')return '';
+  var top=repTop(item.reps);if(!top)return '';
+  var done=sArr.filter(function(s){return s&&s.d;});
+  if(done.length<nSets)return '';
+  var w0=done[0].w,ok=true;
+  done.forEach(function(s){if(s.r<top||s.w!==w0)ok=false;});
+  if(!ok)return '';
+  return 'Все подходы на верхней границе: в следующий раз '+fmtW(w0)+' → '+fmtW(roundTo(w0+(m.step||2.5),m.step,m.min))+' кг';
+}
+/* Сколько недель лучший e1RM не двигается */
+function plateau(exId){
+  var m=EX[exId];if(!m||!m.e1)return 0;
+  var by={};
+  S.log.forEach(function(x){
+    var e=x.e[exId];if(!e||!e.length)return;
+    var wk=weekKey(x.s),b=0;
+    e.forEach(function(s){var q=e1rm(s.w,s.r,m);if(q>b)b=q;});
+    if(b&&(!by[wk]||b>by[wk]))by[wk]=b;
+  });
+  var ks=Object.keys(by).map(Number).sort(function(a,b){return a-b;});
+  if(ks.length<4)return 0;
+  var best=0,since=ks[0];
+  ks.forEach(function(k){if(by[k]>best+0.5){best=by[k];since=k;}});
+  var wks=Math.round((ks[ks.length-1]-since)/6048e5);
+  return wks>=3?wks:0;
+}
+
 /* Календарных дней с последней тренировки, по датам, а не по часам */
 function daysSince(){
   if(!S.log.length)return null;
@@ -563,8 +799,11 @@ function hintsHtml(){
   var wk=weekKey(Date.now());
   var d=daysSince();
 
+  var P=planFor(wk);
+  if(S.bad[wk]) out+='<div class="tip todo"><b>Неделя объявлена трудной.</b> План урезан до минимума, который удерживает результат: зал 1, мобильность 2, кор 1, локоть 5. Снять — на вкладке «Итоги».</div>';
+
   /* 1. Статус недели */
-  var gd=planDone('gym',wk),gn=S.plan.gym;
+  var gd=planDone('gym',wk),gn=P.gym;
   if(gd>=gn&&gn>0){
     out+='<div class="tip good"><b>Зал на неделе закрыт: '+gd+' из '+gn+'.</b> Дальше решают еда и сон, а не дополнительные подходы.</div>';
   }else{
@@ -575,12 +814,21 @@ function hintsHtml(){
 
   /* 2. Домашние блоки */
   var miss=[];
-  [['mob','мобильность'],['core','кор'],['wheel','ролик'],['prio','приоритет']].forEach(function(p){
-    var done=planDone(p[0],wk),need2=S.plan[p[0]];
+  [['mob','мобильность'],['core','кор'],['wheel','ролик'],['prio','приоритет'],['elbow','локоть']].forEach(function(p){
+    var done=planDone(p[0],wk),need2=P[p[0]];
     if(need2>0&&done<need2)miss.push(p[1]+' '+done+'/'+need2);
   });
   if(miss.length) out+='<div class="tip"><b>Дома осталось:</b> '+miss.join(', ')+'. Мобильность и кор важнее приоритета — они работают на спину.</div>';
   else if(S.log.filter(function(x){return weekKey(x.s)===wk;}).length) out+='<div class="tip good"><b>Домашние блоки на неделе выполнены полностью.</b></div>';
+
+  /* 2б. Застой */
+  var stuck=[];
+  Object.keys(EX).forEach(function(k){var n=plateau(k);if(n)stuck.push({n:EX[k].name,w:n});});
+  stuck.sort(function(a,b){return b.w-a.w;});
+  if(stuck.length){
+    out+='<div class="tip todo"><b>Встало: '+stuck.slice(0,3).map(function(x){return x.n.toLowerCase()+' ('+x.w+' нед)';}).join(', ')+'.</b> '+
+      'Три недели без роста — причина обычно не в тренировке. Проверь сон, добор калорий и не пора ли сменить упражнение.</div>';
+  }
 
   /* 3. Пауза */
   if(d===null) out+='<div class="tip">Первая тренировка. Веса подставлены расчётные — первым подходом откалибруй под себя.</div>';
@@ -591,7 +839,14 @@ function hintsHtml(){
   var lastB=S.body.slice().sort(function(a,b){return a.d<b.d?-1:1;}).slice(-1)[0];
   var dow=(new Date().getDay()+6)%7;
   if(dow===6&&(!lastB||weekKey(new Date(lastB.d).getTime())!==wk))
-    out+='<div class="tip todo"><b>Воскресенье — день замеров.</b> Вкладка «Тело»: вес, обхваты, калипер.</div>';
+    out+='<div class="tip todo"><b>Воскресенье — день замеров.</b> Вкладка «Тело»: вес, обхваты, калипер и средние шаги за неделю. От них считается норма калорий.</div>';
+
+  /* 4б. Резервная копия */
+  if(S.log.length>=5){
+    var since=S.backupAt?Math.round((Date.now()-S.backupAt)/864e5):null;
+    if(!S.sync.tok&&(since===null||since>=30))
+      out+='<div class="tip todo"><b>'+(since===null?'Копия данных ещё ни разу не делалась.':'Последняя копия '+since+' дн. назад.')+'</b> Данные живут только в этом браузере. Настрой синхронизацию с GitHub во вкладке «Итоги» — дальше всё пойдёт само.</div>';
+  }
 
   /* 5. Факт дня */
   out+='<div class="tip fact">'+FACTS[Math.floor(Date.now()/864e5)%FACTS.length]+'</div>';
@@ -613,39 +868,100 @@ function audioOut(){
   }
   return amaster;
 }
+/* Сигналы ставятся в очередь звукового движка на точное время. Очередь
+   исполняется в аудиопотоке и не зависит от таймеров вкладки — поэтому
+   сигнал срабатывает и тогда, когда экран телефона уже погас. */
+function tonesAt(t0,n){
+  var dst=audioOut(),made=[];
+  n=n||3;
+  for(var i=0;i<n;i++){
+    var t=t0+i*0.28,f=(i===n-1)?1568:1046;
+    var g=actx.createGain();g.connect(dst);
+    g.gain.setValueAtTime(0.0001,t);
+    g.gain.exponentialRampToValueAtTime(0.9,t+0.01);
+    g.gain.exponentialRampToValueAtTime(0.0001,t+0.26);
+    /* треугольник + октава сверху: заметно слышнее синуса на динамике телефона */
+    var o=actx.createOscillator();o.type='triangle';o.frequency.setValueAtTime(f,t);o.connect(g);
+    var o2=actx.createOscillator(),g2=actx.createGain();
+    o2.type='sine';o2.frequency.setValueAtTime(f*2,t);g2.gain.setValueAtTime(0.35,t);
+    o2.connect(g2);g2.connect(g);
+    o.start(t);o.stop(t+0.28);o2.start(t);o2.stop(t+0.28);
+    made.push(o,o2);
+  }
+  return made;
+}
+function buzz(){try{if(navigator.vibrate)navigator.vibrate([200,90,200,90,240]);}catch(e){}}
 function beep(times){
-  try{
-    var C=window.AudioContext||window.webkitAudioContext;if(!C)return;
-    if(!actx)actx=new C();
-    if(actx.state==='suspended')actx.resume();
-    var dst=audioOut();
-    var n=times||2;
-    for(var i=0;i<n;i++){
-      var t=actx.currentTime+i*0.28;
-      var f=i===n-1?1568:1046;
-      var g=actx.createGain();g.connect(dst);
-      g.gain.setValueAtTime(0.0001,t);
-      g.gain.exponentialRampToValueAtTime(0.9,t+0.01);
-      g.gain.exponentialRampToValueAtTime(0.0001,t+0.26);
-      /* треугольник + октава сверху: заметно слышнее синуса на динамике телефона */
-      var o=actx.createOscillator();o.type='triangle';o.frequency.setValueAtTime(f,t);o.connect(g);
-      var o2=actx.createOscillator(),g2=actx.createGain();
-      o2.type='sine';o2.frequency.setValueAtTime(f*2,t);g2.gain.setValueAtTime(0.35,t);
-      o2.connect(g2);g2.connect(g);
-      o.start(t);o.stop(t+0.28);o2.start(t);o2.stop(t+0.28);
-    }
-  }catch(e){}
-  try{if(navigator.vibrate)navigator.vibrate([200,90,200,90,240]);}catch(e){}
+  try{if(primeAudio())tonesAt(actx.currentTime,times||3);}catch(e){}
+  buzz();
 }
 function primeAudio(){
   try{
-    var C=window.AudioContext||window.webkitAudioContext;if(!C)return;
+    var C=window.AudioContext||window.webkitAudioContext;if(!C)return false;
     if(!actx)actx=new C();
     if(actx.state==='suspended')actx.resume();
+    return true;
+  }catch(e){return false;}
+}
+/* Неслышимый тон держит аудиопоток открытым на время отдыха. Без него система
+   глушит вкладку через несколько секунд после блокировки экрана, и вместе с
+   вкладкой замолкает уже поставленный в очередь сигнал. */
+var keepN=null,alarmN=[];
+function keepAlive(on){
+  try{
+    if(on){
+      if(keepN||!primeAudio())return;
+      var t=actx.currentTime;
+      var o=actx.createOscillator(),g=actx.createGain();
+      g.gain.setValueAtTime(0.0001,t);
+      o.type='sine';o.frequency.setValueAtTime(40,t);
+      o.connect(g);g.connect(actx.destination);o.start(t);
+      keepN=o;
+    }else if(keepN){
+      try{keepN.stop();}catch(e){}
+      keepN=null;
+    }
+  }catch(e){}
+}
+function scheduleAlarm(sec){
+  cancelAlarm();
+  if(!primeAudio())return;
+  keepAlive(true);
+  try{alarmN=tonesAt(actx.currentTime+sec,3);}catch(e){}
+}
+function cancelAlarm(){
+  alarmN.forEach(function(n){try{n.stop(0);}catch(e){}});
+  alarmN=[];
+}
+/* Уведомление — подстраховка на случай, если система всё же усыпила звук */
+function askNotify(){
+  try{if('Notification' in window&&Notification.permission==='default')Notification.requestPermission();}catch(e){}
+}
+function notifyRest(){
+  try{
+    if(!('Notification' in window)||Notification.permission!=='granted')return;
+    if(navigator.serviceWorker&&navigator.serviceWorker.ready){
+      navigator.serviceWorker.ready.then(function(r){
+        r.showNotification('Отдых окончен',{body:'Следующий подход',tag:'rest',renotify:true,
+          vibrate:[200,90,200,90,240],icon:'icon-192.png',badge:'icon-192.png'});
+      }).catch(function(){});
+    }
   }catch(e){}
 }
 document.addEventListener('touchstart',primeAudio,{once:true});
 document.addEventListener('click',primeAudio,{once:true});
+
+/* ============ ЭКРАН НЕ ГАСНЕТ ============ */
+var wlock=null;
+function wakeOn(){
+  try{
+    if(!navigator.wakeLock||wlock)return;
+    navigator.wakeLock.request('screen').then(function(l){
+      wlock=l;l.addEventListener('release',function(){wlock=null;});
+    }).catch(function(){});
+  }catch(e){}
+}
+function wakeOff(){try{if(wlock){wlock.release();wlock=null;}}catch(e){}}
 
 /* ============ ТАЙМЕР ОТДЫХА ============ */
 var restT=null;
@@ -660,13 +976,15 @@ function startRest(sec){
   if(!sec){toast('Для этого упражнения отдых не нужен');return;}
   var end=Date.now()+sec*1000;
   var b=document.getElementById('restbtn');
-  primeAudio();
+  askNotify();
+  /* звук ставится в очередь сразу, а не в момент срабатывания таймера */
+  scheduleAlarm(sec);
   function up(){
     var left=Math.ceil((end-Date.now())/1000);
     if(left<=0){
       clearInterval(restT);restT=null;
       b.className='restbtn fire';b.textContent='Пора';
-      beep(3);
+      buzz();notifyRest();keepAlive(false);
       setTimeout(function(){if(!restT)paintRest();},4000);
       return;
     }
@@ -675,7 +993,7 @@ function startRest(sec){
   }
   up();restT=setInterval(up,250);
 }
-function stopRest(){if(restT){clearInterval(restT);restT=null;}}
+function stopRest(){if(restT){clearInterval(restT);restT=null;}cancelAlarm();keepAlive(false);}
 function paintRest(){
   var b=document.getElementById('restbtn');
   if(!S.active){b.hidden=true;stopRest();return;}
@@ -712,9 +1030,10 @@ function startSetTimer(exId,kind,idx,sec,btn,row){
       var bank=kind==='w'?S.active.w:S.active.e;
       var arr=bank[exId]=bank[exId]||[];
       var cur=arr[idx]||{};
-      arr[idx]={w:cur.w||0,r:sec,d:true,warn:false};
+      arr[idx]={w:cur.w||0,r:sec,d:true,warn:false,q:cur.q};
       S.active.lastEx=exId;
-      save();beep(3);renderWork();paintRest();
+      save();beep(3);renderWork();
+      if(kind==='s'&&EX[exId].restS)startRest(EX[exId].restS);else paintRest();
       return;
     }
     btn.textContent=left>=60?(Math.floor(left/60)+':'+pad(left%60)):left;
@@ -724,28 +1043,42 @@ function startSetTimer(exId,kind,idx,sec,btn,row){
 }
 
 /* ============ ЭКРАН: ТРЕНИРОВКА ============ */
+var openEx={};   /* выполненные упражнения, которые пользователь раскрыл обратно */
+/* Замена упражнения: в плане слот item.id, а пишем и читаем по exIdFor —
+   поэтому история подменённого упражнения остаётся своей и не смешивается. */
+function exIdFor(item){return (S.active&&S.active.swap&&S.active.swap[item.id])||item.id;}
+function frac(done,need){
+  var c=need===0?'':(done>=need?' ok':(done>0?' miss':' zero'));
+  return '<span class="dn fr'+c+'">'+done+'/'+need+'</span>';
+}
 function renderWork(){
   var v=document.getElementById('v-work'),sub=document.getElementById('sub');
 
   if(!S.active){
     sub.textContent='Выбери тренировку';
+    var wk=weekKey(Date.now()),P=planFor(wk);
     var h=hintsHtml();
     h+='<p class="hdr">Зал</p><div class="pick">';
+    var gd=planDone('gym',wk);
     ['A','B'].forEach(function(k){
       var last=S.log.filter(function(x){return x.day===k;}).slice(-1)[0];
       var tot=DAYS[k].ex.reduce(function(a,x){return a+setsOf(k,x);},0);
-      h+='<button data-start="'+k+'"><span class="dn">'+k+'</span><span class="dd"><b>'+DAYS[k].t+'</b>'+
+      h+='<button data-start="'+k+'">'+frac(gd,P.gym)+'<span class="dd"><b>'+DAYS[k].t+'</b>'+
          '<span>'+DAYS[k].ex.length+' упражнений · '+tot+' рабочих подходов</span>'+
          '<em>'+(last?'Последний раз: '+dwd(last.s):'Ещё не выполнялся')+'</em></span></button>';
     });
     h+='</div><p class="hdr">Дома</p><div class="pick home">';
     HOME_KEYS.forEach(function(k){
       var last=S.log.filter(function(x){return x.day===k;}).slice(-1)[0];
-      h+='<button data-start="'+k+'"><span class="dn">'+DAYS[k].ex.length+'</span><span class="dd"><b>'+DAYS[k].t+'</b>'+
+      h+='<button data-start="'+k+'">'+frac(planDone(k,wk),P[k])+'<span class="dd"><b>'+DAYS[k].t+'</b>'+
          '<span>~'+DAYS[k].mins+' мин · '+DAYS[k].ex.length+' упражнений</span>'+
          '<em>'+(last?'Последний раз: '+dwd(last.s):'Ещё не выполнялся')+'</em></span></button>';
     });
-    h+='</div>';
+    h+='</div><p class="hdr">Корт</p><div class="pick home">';
+    var lp=S.log.filter(function(x){return x.day==='padel';}).slice(-1)[0];
+    h+='<button data-start="padel">'+frac(planDone('padel',wk),P.padel)+'<span class="dd"><b>Падел</b>'+
+       '<span>Записать игру: время и калории с пульсометра</span>'+
+       '<em>'+(lp?'Последний раз: '+dwd(lp.s):'Ещё не записан')+'</em></span></button></div>';
     v.innerHTML=h;setClock(null);return;
   }
 
@@ -753,24 +1086,45 @@ function renderWork(){
   sub.textContent=day.t+' · идёт';
   var out='';
   day.ex.forEach(function(item,i){
-    var m=EX[item.id],nSets=setsOf(S.active.day,item);
-    var sArr=S.active.e[item.id]||[],wArr=S.active.w[item.id]||[];
+    var exId=exIdFor(item),m=EX[exId],nSets=setsOf(S.active.day,item);
+    var sArr=S.active.e[exId]||[],wArr=S.active.w[exId]||[];
     var doneN=sArr.filter(function(s){return s&&s.d;}).length;
-    var prevS=lastDone(item.id,'e'),prevW=lastDone(item.id,'w');
+    var tag=' data-ex="'+exId+'" data-item="'+item.id+'"';
+
+    /* всё сделано и пользователь не раскрывал обратно — сворачиваем в строку.
+       Подсказка о прибавке веса срабатывает ровно в этот момент, поэтому
+       её выносим прямо в свёрнутую строку, иначе она осталась бы незамеченной. */
+    if(doneN>=nSets&&!openEx[exId]){
+      var sum=sArr.filter(function(s){return s&&s.d;}).map(function(s){
+        return m.noW?String(s.r):fmtW(s.w)+'×'+s.r;}).join('  ');
+      var fh=progHint(item,m,sArr,nSets);
+      out+='<article class="ex done"'+tag+'>'+
+        '<button class="exfold" data-a="fold"><span class="exn">'+(i+1)+'</span>'+
+        '<span class="ext"><h3>'+m.name+'</h3><span class="fsum">'+sum+'</span>'+
+        (fh?'<span class="fsum" style="color:var(--ok)">↑ '+fh.replace('Все подходы на верхней границе: в следующий раз ','след. раз ')+'</span>':'')+
+        '</span><span class="foldi">▾</span></button></article>';
+      return;
+    }
+
+    var prevS=lastDone(exId,'e');
     var base=(sArr[0]&&sArr[0].w)||(prevS&&prevS[0]?prevS[0].w:0)||(m.bw||m.noW?0:m.start);
-    var cust=S.custom[item.id]||{};
+    var cust=S.custom[exId]||{};
 
     /* лучший e1RM в текущей сессии */
     var cur1=0;sArr.forEach(function(s){if(s&&s.d){var q=e1rm(s.w,s.r,m);if(q>cur1)cur1=q;}});
-    var rec=bestEver(item.id);
+    var rec=bestEver(exId);
     var isPR=cur1>0&&cur1>=rec-0.01&&rec>0;
 
-    out+='<article class="ex'+(doneN>=nSets?' done':'')+'" data-ex="'+item.id+'">'+
+    out+='<article class="ex'+(doneN>=nSets?' done':'')+'"'+tag+'>'+
       '<div class="exh"><span class="exn">'+(i+1)+'</span><span class="ext">'+
-      '<h3>'+m.name+(isPR?'<span class="pr">Рекорд</span>':'')+'</h3>'+
+      '<h3>'+m.name+(isPR?'<span class="pr">Рекорд</span>':'')+(exId!==item.id?'<span class="grp">замена</span>':'')+'</h3>'+
       '<span class="tgt">'+nSets+' × '+item.reps+'<span class="grp">'+m.grp+'</span></span>'+
       '</span></div><p class="hint">'+m.hint+'</p>';
     if(m.e1&&cur1>0) out+='<div class="e1">Расчётный 1ПМ: '+Math.round(cur1)+' кг'+(rec>0?'  ·  рекорд '+Math.round(rec)+' кг':'')+'</div>';
+    var ph=progHint(item,m,sArr,nSets);
+    if(ph) out+='<div class="phint">'+ph+'</div>';
+    var pl=plateau(exId);
+    if(pl&&!ph) out+='<div class="pwarn">Лучший результат стоит '+pl+' нед. Смотри не на подходы, а на сон и добор калорий.</div>';
     if(cust.note) out+='<div class="mynote">'+esc(cust.note)+'</div>';
     out+='<div class="sets">';
 
@@ -780,7 +1134,7 @@ function renderWork(){
         var st=wArr[j]||{};
         var wv=(st.w!==undefined&&st.w!==null)?st.w:(m.bw?0:roundTo(base*w.p,m.step,m.min));
         var rv=(st.r!==undefined&&st.r!==null)?st.r:w.r;
-        out+=setRow(m,'w',j,wv,rv,!!st.d,null,false);
+        out+=setRow(m,'w',j,wv,rv,!!st.d,null,false,null);
       });
       out+='<div class="sect">Рабочие</div>';
     }
@@ -789,19 +1143,20 @@ function renderWork(){
       var pv2=prevS&&prevS[j]?prevS[j]:null;
       var wv2=(st2.w!==undefined&&st2.w!==null)?st2.w:(pv2?pv2.w:(m.bw||m.noW?0:m.start));
       var rv2=(st2.r!==undefined&&st2.r!==null)?st2.r:(pv2?pv2.r:(m.repdef||item.rd));
-      out+=setRow(m,'s',j,wv2,rv2,!!st2.d,pv2,!!st2.warn);
+      out+=setRow(m,'s',j,wv2,rv2,!!st2.d,pv2,!!st2.warn,st2.q);
     }
     out+='<div class="setbtns"><button data-a="set+">+ подход</button><button data-a="set-">− подход</button>'+
-         '<button data-a="note">Примечание</button></div>';
+         '<button data-a="swap">Заменить</button><button data-a="note">Примечание</button>'+
+         (doneN>=nSets?'<button data-a="fold">Свернуть</button>':'')+'</div>';
     out+='</div><button class="tech-btn" aria-expanded="false" data-a="tech">Техника · отдых '+(m.rest||'—')+'</button>'+
-         '<div class="tech">'+techHtml(m,item.id)+'</div></article>';
+         '<div class="tech">'+techHtml(m,exId)+'</div></article>';
   });
   out+='<button class="big go gap" data-a="finish">Завершить тренировку</button>'+
        '<button class="big dan gap" data-a="drop">Отменить без сохранения</button>';
   v.innerHTML=out;
 }
 
-function setRow(m,kind,j,wv,rv,done,pv,warn){
+function setRow(m,kind,j,wv,rv,done,pv,warn,rir){
   var lock=done?' disabled':'';
   var lbl=kind==='w'?'Р'+(j+1):(j+1);
   var s='<div class="row'+(kind==='w'?' wu':'')+(done?' filled':'')+(warn?' warn':'')+'" data-k="'+kind+'" data-i="'+j+'">'+
@@ -813,6 +1168,15 @@ function setRow(m,kind,j,wv,rv,done,pv,warn){
   }
   s+='<span class="fld"><button data-a="r-"'+lock+'>−</button><input type="text" inputmode="numeric" data-f="r" value="'+rv+'"'+lock+'><button data-a="r+"'+lock+'>+</button></span><span class="un">'+(m.unit||'пв')+'</span>'+
     '<button class="chk'+(done?' on':'')+'" data-a="ok">'+(done?'✓':'○')+'</button></div>';
+  /* Запас повторов — только у выполненного рабочего подхода: раньше его
+     всё равно не знаешь, а места в строке он не занимает. */
+  if(done&&kind==='s'&&m.unit!=='сек'){
+    s+='<div class="rirbar"><span>Запас:</span>';
+    [0,1,2,3].forEach(function(q){
+      s+='<button data-a="rir" data-q="'+q+'"'+(rir===q?' class="on"':'')+'>'+q+'</button>';
+    });
+    s+='<span>'+(rir===undefined||rir===null?'сколько ещё мог':(rir===0?'до отказа':'в запасе'))+'</span></div>';
+  }
   if(pv&&!m.noW) s+='<div class="prev">прошлый раз: '+fmtW(pv.w)+(m.bw?'':' кг')+' × '+pv.r+'</div>';
   else if(pv) s+='<div class="prev">прошлый раз: '+pv.r+'</div>';
   if(warn) s+='<div class="wmsg">Сильное отклонение от прошлой тренировки — проверь цифры</div>';
@@ -878,9 +1242,10 @@ document.addEventListener('click',function(ev){
   if(a==='tech'){var op=b.getAttribute('aria-expanded')==='true';b.setAttribute('aria-expanded',op?'false':'true');b.nextElementSibling.classList.toggle('open',!op);return;}
   if(a==='finish'){var n=countActive();if(!n){toast('Нет ни одного отмеченного подхода');return;}openFinish();return;}
   if(a==='drop'){
-    if(armed&&armed.el===b){disarm();stopRest();stopSetTimer(true);S.active=null;save();renderWork();setClock(null);paintRest();toast('Тренировка отменена');}
+    if(armed&&armed.el===b){disarm();stopRest();stopSetTimer(true);S.active=null;openEx={};wakeOff();save();renderWork();setClock(null);paintRest();toast('Тренировка отменена');}
     else arm(b,'Точно отменить? Всё сотрётся');return;}
   if(a==='fsave'){doFinish();return;}
+  if(a==='psave'){savePadel();return;}
   if(a==='mclose'){closeModal();return;}
   if(a==='esave'){saveEdit();return;}
   if(a==='edel'){
@@ -893,14 +1258,17 @@ document.addEventListener('click',function(ev){
     return;}
   if(a==='note'){openNote(b.closest('.ex').dataset.ex);return;}
   if(a==='nsave'){saveNote();return;}
+  if(a==='fold'){var fx=b.closest('.ex').dataset.ex;openEx[fx]=!openEx[fx];renderWork();return;}
+  if(a==='swap'){openSwap(b.closest('.ex').dataset.item);return;}
+  if(a==='doswap'){doSwap();return;}
   if(a==='set+'||a==='set-'){
-    var exId=b.closest('.ex').dataset.ex;
-    var it=DAYS[S.active.day].ex.filter(function(x){return x.id===exId;})[0];
+    var host=b.closest('.ex'),itemId=host.dataset.item;
+    var it=DAYS[S.active.day].ex.filter(function(x){return x.id===itemId;})[0];
     var cur=setsOf(S.active.day,it);
     var nv=a==='set+'?cur+1:cur-1;
     if(nv<1){toast('Минимум один подход');return;}
     if(nv>12){toast('Больше 12 подходов не нужно');return;}
-    S.setsOv[exId]=nv;save();renderWork();return;}
+    S.setsOv[itemId]=nv;save();renderWork();return;}
   if(a==='bm'){var bi=document.getElementById('b_'+b.dataset.k);bi.value=fmtW(Math.max(0,num(bi.value)+parseFloat(b.dataset.s)));return;}
   if(a==='bsave'){saveBody();return;}
   if(a==='bdel'){if(armed&&armed.el===b){var dd=b.dataset.d;disarm();S.body=S.body.filter(function(x){return x.d!==dd;});save();renderBody();toast('Запись удалена');}else arm(b,'Удалить?');return;}
@@ -908,11 +1276,32 @@ document.addEventListener('click',function(ev){
     if(armed&&armed.el===b){disarm();var l=S.log.pop();save();renderStat();toast('Удалено: '+DAYS[l.day].t+' от '+dstr(l.s));}
     else arm(b,'Удалить последнюю?');return;}
   if(a==='cal'){calM=+b.dataset.m;renderStat();return;}
+  if(a==='wsel'){var sw=+b.dataset.w;statWk=(statWk===sw)?null:sw;renderStat();return;}
+  if(a==='bad'){var bw=+b.dataset.w;if(S.bad[bw])delete S.bad[bw];else S.bad[bw]=1;save();renderStat();
+    toast(S.bad[bw]?'Неделя отмечена трудной — план урезан':'Обычный план возвращён');return;}
+  if(a==='sysave'){saveSync();return;}
+  if(a==='syup'){toast('Выгружаю…');cloudPush(false);return;}
+  if(a==='sydown'){
+    if(armed&&armed.el===b){disarm();cloudPull();}
+    else arm(b,'Заменить местные данные?');
+    return;}
   if(a==='exp'){doExport();return;}
   if(a==='expcsv'){doCsv();return;}
   if(a==='expai'){doAi();return;}
   if(a==='imp'){doImport();return;}
   if(a==='wipe'){if(armed&&armed.el===b){disarm();S.log=[];S.body=[];S.active=null;save();renderStat();toast('Все данные удалены');}else arm(b,'Стереть всё безвозвратно?');return;}
+
+  if(a==='rir'){
+    /* .rirbar — соседний блок под строкой подхода, а не внутри неё */
+    var rrow=b.parentNode.previousElementSibling;if(!rrow)return;
+    var rex=b.closest('.ex').dataset.ex,ri=+rrow.dataset.i;
+    var rarr=(rrow.dataset.k==='w'?S.active.w:S.active.e)[rex]||[];
+    if(rarr[ri]){
+      var q=+b.dataset.q;
+      rarr[ri].q=(rarr[ri].q===q)?undefined:q;
+      save();renderWork();
+    }
+    return;}
 
   var row=b.closest('.row');if(!row)return;
   var exId2=b.closest('.ex').dataset.ex,idx=+row.dataset.i,kind=row.dataset.k,m=EX[exId2];
@@ -945,9 +1334,12 @@ document.addEventListener('click',function(ev){
       var before=bestEver(exId2),now=e1rm(wv,rv,m);
       if(m.e1&&now>0&&before>0&&now>before+0.5) setTimeout(function(){toast('Рекорд! Расчётный 1ПМ: '+Math.round(now)+' кг',1);},80);
     }
-    arr[idx]={w:wv,r:rv,d:nd,warn:warn};
+    arr[idx]={w:wv,r:rv,d:nd,warn:warn,q:cur.q};
     if(nd)S.active.lastEx=exId2;
-    save();renderWork();paintRest();return;
+    save();renderWork();
+    /* отдых стартует сам — второй тап не нужен, кнопка остаётся для ручного случая */
+    if(nd&&kind==='s'&&m.restS){startRest(m.restS);return;}
+    paintRest();return;
   }
 });
 document.addEventListener('change',function(ev){
@@ -967,7 +1359,8 @@ window.addEventListener('pagehide',flushElapsed);
 document.addEventListener('visibilitychange',function(){
   if(!S.active)return;
   if(document.hidden)flushElapsed();
-  else setClock(true);
+  /* блокировка экрана снимает wake lock — возвращаем его при возврате во вкладку */
+  else{setClock(true);wakeOn();}
 });
 document.getElementById('clock').addEventListener('click',function(){
   if(!S.active)return;
@@ -986,11 +1379,16 @@ function commit(exId,kind,idx,row){
   var bank=kind==='w'?S.active.w:S.active.e;
   var arr=bank[exId]=bank[exId]||[];
   var cur=arr[idx]||{},wq=row.querySelector('[data-f="w"]');
-  arr[idx]={w:wq?num(wq.value):0,r:num(row.querySelector('[data-f="r"]').value),d:!!cur.d,warn:!!cur.warn};
+  arr[idx]={w:wq?num(wq.value):0,r:num(row.querySelector('[data-f="r"]').value),d:!!cur.d,warn:!!cur.warn,q:cur.q};
   save();
 }
 function countActive(){var n=0;Object.keys(S.active.e).forEach(function(k){S.active.e[k].forEach(function(s){if(s&&s.d)n++;});});return n;}
-function startDay(k){stopRest();stopSetTimer(true);S.active={day:k,type:DAYS[k].type,s:Date.now(),pAcc:0,e:{},w:{}};accSaveAt=Date.now();save();renderWork();setClock(true);paintRest();window.scrollTo(0,0);}
+function startDay(k){
+  if(k==='padel'){openPadel();return;}
+  stopRest();stopSetTimer(true);openEx={};
+  S.active={day:k,type:DAYS[k].type,s:Date.now(),pAcc:0,e:{},w:{},swap:{}};
+  accSaveAt=Date.now();save();renderWork();setClock(true);paintRest();wakeOn();window.scrollTo(0,0);
+}
 
 /* ============ МОДАЛКА ЗАВЕРШЕНИЯ ============ */
 function openModal(html){document.getElementById('modal').innerHTML=html;document.getElementById('mask').classList.add('on');}
@@ -1027,11 +1425,85 @@ function doFinish(){
   var mins=Math.max(1,num(document.getElementById('fmins').value));
   var kcal=num(document.getElementById('fkcal').value);
   var note=document.getElementById('fnote').value.trim();
-  S.log.push({day:a.day,type:a.type||DAYS[a.day].type,s:a.s,f:a.s+mins*60000,e:ce,w:cw,kcal:kcal||0,note:note});
-  stopRest();stopSetTimer(true);S.active=null;save();closeModal();renderWork();setClock(null);paintRest();
+  S.log.push({day:a.day,type:a.type||DAYS[a.day].type,s:a.s,f:a.s+mins*60000,e:ce,w:cw,
+              kcal:kcal||0,note:note,bw:bodyW(),
+              swap:(a.swap&&Object.keys(a.swap).length)?a.swap:undefined});
+  /* план недели фиксируется здесь: дальше его правка эту неделю не тронет */
+  freezePlan(weekKey(a.s));
+  stopRest();stopSetTimer(true);S.active=null;openEx={};wakeOff();
+  save();closeModal();renderWork();setClock(null);paintRest();
   var l=S.log[S.log.length-1];
-  toast('Записано: '+countSets(l)+' подходов, '+mins+' мин'+(kcal?', '+kcal+' ккал':''));
+  toast('Записано: '+countSets(l)+' подходов, '+mins+' мин · '+kcalOf(l)+' ккал');
+  cloudPush(true);
 }
+/* ============ ЗАМЕНА УПРАЖНЕНИЯ ============ */
+function openSwap(itemId){
+  var cur=exIdFor({id:itemId}),m=EX[cur];
+  var same=[],other=[];
+  Object.keys(EX).forEach(function(k){
+    if(k===cur)return;
+    /* упражнение без веса вместо силового — почти всегда ошибка, не предлагаем */
+    if(EX[k].noW&&!m.noW)return;
+    (EX[k].grp===m.grp?same:other).push(k);
+  });
+  var opt=function(k){return '<option value="'+k+'">'+EX[k].name+'</option>';};
+  openModal('<h3>Замена упражнения</h3><p class="sub">Сейчас: '+m.name+'. Тренажёр занят — подставь аналог. История подменённого упражнения останется отдельной, ничего не перемешается.</p>'+
+    '<select id="swsel"><option value="'+itemId+'">— вернуть по плану: '+EX[itemId].name+' —</option>'+
+    (same.length?'<optgroup label="Та же группа: '+m.grp+'">'+same.map(opt).join('')+'</optgroup>':'')+
+    '<optgroup label="Остальные">'+other.map(opt).join('')+'</optgroup></select>'+
+    '<input type="hidden" id="swid" value="'+itemId+'">'+
+    '<button class="big go" data-a="doswap">Заменить</button>'+
+    '<button class="big fin gap" data-a="mclose">Назад</button>');
+}
+function doSwap(){
+  var itemId=document.getElementById('swid').value,nv=document.getElementById('swsel').value;
+  S.active.swap=S.active.swap||{};
+  if(nv===itemId)delete S.active.swap[itemId];else S.active.swap[itemId]=nv;
+  save();closeModal();renderWork();
+  toast(nv===itemId?'Вернул упражнение по плану':'Заменено: '+EX[nv].name);
+}
+
+/* ============ ПАДЕЛ ============ */
+function openPadel(){
+  var w=bodyW();
+  openModal('<h3>Падел</h3><p class="sub">Игра пишется сразу, без таймера. Калории с нагрудника скорректирую под реальность.</p>'+
+    '<label class="mlab">Дата</label><input type="date" id="pdate" value="'+iso(Date.now())+'">'+
+    '<label class="mlab">Длительность, мин</label>'+
+    '<input type="text" inputmode="numeric" class="txt" id="pmins" value="90">'+
+    '<label class="mlab">Калории с пульсометра<em>Как показал нагрудник. Оставь пустым — посчитаю по времени и весу</em></label>'+
+    '<input type="text" inputmode="numeric" class="txt" id="pkcal" value="">'+
+    '<div class="syncst no" id="ppv"></div>'+
+    '<label class="mlab">Заметка</label>'+
+    '<textarea class="small" id="pnote" placeholder="С кем играл, как спина, как локоть"></textarea>'+
+    '<button class="big go" data-a="psave">Сохранить</button>'+
+    '<button class="big fin gap" data-a="mclose">Назад</button>');
+  function upd(){
+    var mn=Math.max(1,num(document.getElementById('pmins').value));
+    var raw=num(document.getElementById('pkcal').value);
+    var real=padelKcal(raw,mn,w);
+    document.getElementById('ppv').innerHTML=raw
+      ? 'Нагрудник показал <b>'+raw+'</b> ккал, в зачёт пойдёт <b>'+real+'</b>. Между розыгрышами пульс остаётся высоким, а потребление кислорода за ним не идёт — прибор засчитывает эти паузы как нагрузку.'
+      : 'Расчёт по времени и весу: <b>'+real+'</b> ккал. Падел ≈ 6,5 MET при '+fmtW(w)+' кг.';
+  }
+  ['pmins','pkcal'].forEach(function(id){document.getElementById(id).addEventListener('input',upd);});
+  upd();
+}
+function savePadel(){
+  var d=document.getElementById('pdate').value||iso(Date.now());
+  var mn=Math.max(1,num(document.getElementById('pmins').value));
+  var raw=num(document.getElementById('pkcal').value);
+  var note=document.getElementById('pnote').value.trim();
+  var st=new Date(d+'T12:00:00').getTime();
+  if(!isFinite(st))st=Date.now();
+  var w=bodyW();
+  S.log.push({day:'padel',type:'padel',s:st,f:st+mn*60000,e:{},w:{},kcalRaw:raw||0,kcal:0,bw:w,note:note});
+  S.log.sort(function(a,b){return a.s-b.s;});
+  freezePlan(weekKey(st));
+  save();closeModal();renderWork();
+  toast('Падел записан: '+mn+' мин, '+padelKcal(raw,mn,w)+' ккал в зачёт');
+  cloudPush(true);
+}
+
 function openNote(id){
   var c=S.custom[id]||{};
   openModal('<h3>Примечание</h3><p class="sub">'+EX[id].name+'</p>'+
@@ -1060,8 +1532,10 @@ function openEdit(i){
     '<ul class="done-list">'+lines.join('')+'</ul>'+
     '<label class="mlab">Длительность, мин</label>'+
     '<input type="text" inputmode="numeric" class="txt" id="emins" value="'+mins+'">'+
-    '<label class="mlab">Калории<em>С нагрудного пульсометра</em></label>'+
-    '<input type="text" inputmode="numeric" class="txt" id="ekcal" value="'+(x.kcal||'')+'">'+
+    '<label class="mlab">Калории'+(typeOf(x)==='padel'
+        ? ' с пульсометра<em>Скорректируются автоматически. Сейчас в зачёте '+kcalOf(x)+' ккал</em>'
+        : '<em>С нагрудного пульсометра. Пусто — посчитаю по времени и весу</em>')+'</label>'+
+    '<input type="text" inputmode="numeric" class="txt" id="ekcal" value="'+(typeOf(x)==='padel'?(x.kcalRaw||''):(x.kcal||''))+'">'+
     '<label class="mlab">Заметка</label>'+
     '<textarea class="small" id="enote" placeholder="Самочувствие, спина, что пошло не так">'+esc(x.note||'')+'</textarea>'+
     '<input type="hidden" id="eidx" value="'+i+'">'+
@@ -1073,9 +1547,10 @@ function saveEdit(){
   var i=+document.getElementById('eidx').value,x=S.log[i];if(!x)return;
   var mins=Math.max(1,num(document.getElementById('emins').value));
   x.f=x.s+mins*60000;
-  x.kcal=num(document.getElementById('ekcal').value)||0;
+  var kv=num(document.getElementById('ekcal').value)||0;
+  if(typeOf(x)==='padel')x.kcalRaw=kv;else x.kcal=kv;
   x.note=document.getElementById('enote').value.trim();
-  save();closeModal();
+  save();cloudPush(true);closeModal();
   if(document.getElementById('v-stat').classList.contains('on'))renderStat();else renderProg();
   toast('Тренировка обновлена');
 }
@@ -1122,12 +1597,18 @@ function strengthIndex(){
 function weekStatus(wk){
   var ss=S.log.filter(function(x){return weekKey(x.s)===wk;});
   if(!ss.length&&wk>=weekKey(Date.now()))return 'n';
-  var gym=ss.filter(function(x){return (x.type||DAYS[x.day].type)==='gym';}).length;
-  var homeNeed=S.plan.mob+S.plan.core+S.plan.wheel+S.plan.prio;
-  var home=ss.length-gym;
-  if(gym<S.plan.gym)return 'r';
-  if(home<homeNeed)return 'y';
+  var P=planFor(wk);
+  var gym=ss.filter(function(x){return typeOf(x)==='gym';}).length;
+  var home=ss.filter(function(x){return typeOf(x)==='home';}).length;
+  if(gym<P.gym)return 'r';
+  if(home<homeNeed(P))return 'y';
   return 'g';
+}
+/* Подходы по группам за последние n недель */
+function groupTrend(n){
+  var wk=weekKey(Date.now()),wks=[],by=[];
+  for(var i=n-1;i>=0;i--){var w=wk-i*7*864e5;wks.push(w);by.push(groupWeek(w));}
+  return{wks:wks,by:by};
 }
 function streak(){
   var wk=weekKey(Date.now())-7*864e5,n=0;
@@ -1250,7 +1731,7 @@ function saveBody(){
   BODY.forEach(function(f){var raw=document.getElementById('b_'+f.k).value.trim();if(raw!==''){rec[f.k]=num(raw);any=true;}});
   if(!any){toast('Заполни хотя бы одно поле');return;}
   S.body=S.body.filter(function(x){return x.d!==d;});
-  S.body.push(rec);save();renderBody();toast('Замер сохранён: '+d);window.scrollTo(0,0);
+  S.body.push(rec);save();cloudPush(true);renderBody();toast('Замер сохранён: '+d);window.scrollTo(0,0);
 }
 
 /* ============ ИТОГИ ============ */
@@ -1265,14 +1746,15 @@ function renderStat(){
   h+='<h4>Индекс силы</h4><p class="sub">Средний рост расчётного 1ПМ по всем базовым упражнениям. 100 — твой старт. Растёт только когда растут веса и повторы, объём сам по себе его не двигает.</p>';
   h+='<div class="chart">'+lineChart(si,'#4EA97B','')+'</div>';
 
+  var TP=planFor(tw);
   h+='<h4>Эта неделя</h4><div class="kpis">'+
-    '<div class="kpi'+(gymW>=S.plan.gym?' hl':'')+'"><b>'+gymW+'/'+S.plan.gym+'</b><span>зал</span></div>'+
-    '<div class="kpi"><b>'+(ws.length-gymW)+'/'+(S.plan.mob+S.plan.core+S.plan.wheel+S.plan.prio)+'</b><span>дома</span></div>'+
+    '<div class="kpi'+(gymW>=TP.gym?' hl':'')+'"><b>'+gymW+'/'+TP.gym+'</b><span>зал</span></div>'+
+    '<div class="kpi"><b>'+ws.filter(function(x){return typeOf(x)==='home';}).length+'/'+homeNeed(TP)+'</b><span>дома</span></div>'+
     '<div class="kpi'+(st>0?' hl':'')+'"><b>'+st+'</b><span>недель<br>подряд по плану</span></div></div>';
   h+='<div class="kpis" style="margin-top:8px">'+
     '<div class="kpi"><b>'+ws.reduce(function(a,x){return a+countSets(x);},0)+'</b><span>подходов</span></div>'+
     '<div class="kpi"><b>'+(Math.round(ws.reduce(function(a,x){return a+tonnage(x);},0)/100)/10)+'т</b><span>тоннаж</span></div>'+
-    '<div class="kpi"><b>'+ws.reduce(function(a,x){return a+(x.kcal||0);},0)+'</b><span>ккал</span></div></div>';
+    '<div class="kpi"><b>'+weekKcal(tw)+'</b><span>ккал</span></div></div>';
 
   /* календарь */
   var now=new Date();
@@ -1298,13 +1780,57 @@ function renderStat(){
     }
     var wk=weekKey(rowStart.getTime()),stt=weekStatus(wk);
     var lbl={g:'✓',y:'~',r:'✕',n:'·'}[stt];
-    cells+='<div class="wst '+stt+'">'+lbl+'</div>';
-    h+='<div class="calrow">'+cells+'</div>';
+    cells+='<button class="wst '+stt+'" data-a="wsel" data-w="'+wk+'">'+lbl+'</button>';
+    h+='<div class="calrow'+(statWk===wk?' sel':'')+'">'+cells+'</div>';
     if(cur.getMonth()!==mm&&wRow>=3)break;
   }
   h+='<div class="leg"><span><i style="background:var(--ok)"></i>зал</span><span><i style="background:var(--dat)"></i>дома</span>'+
      '<span><i style="background:var(--ok)"></i>неделя по плану</span><span><i style="background:var(--warn)"></i>пропущено дома</span>'+
-     '<span><i style="background:var(--stop)"></i>пропущен зал</span></div></div>';
+     '<span><i style="background:var(--stop)"></i>пропущен зал</span></div>'+
+     '<p class="note-s">Нажми на значок недели справа — ниже раскроется расход калорий за неё.</p></div>';
+
+  /* ---- выбранная неделя ---- */
+  if(statWk!==null){
+    var ws2=S.log.filter(function(x){return weekKey(x.s)===statWk;});
+    h+='<div class="wbox"><h5>Неделя '+dstr(statWk)+' — '+dstr(statWk+6*864e5)+'</h5>';
+    if(!ws2.length){
+      h+='<p class="note-s">За эту неделю записей нет.</p>';
+    }else{
+      var acc={gym:0,home:0,padel:0},cn={gym:0,home:0,padel:0};
+      ws2.forEach(function(x){var t=typeOf(x);acc[t]+=kcalOf(x);cn[t]++;});
+      h+='<div class="kv"><span>Зал · '+cn.gym+'</span><b>'+acc.gym+' ккал</b></div>'+
+         '<div class="kv"><span>Дома · '+cn.home+'</span><b>'+acc.home+' ккал</b></div>'+
+         '<div class="kv"><span>Падел · '+cn.padel+'</span><b>'+acc.padel+' ккал</b></div>'+
+         '<div class="kv tot"><span>Всего за неделю</span><b>'+(acc.gym+acc.home+acc.padel)+' ккал</b></div>';
+      h+='<p class="note-s">Зал — цифра с пульсометра, как ты её вписал. Падел — та же цифра, срезанная до реальной. Домашние блоки ты не считаешь, поэтому они посчитаны по MET: мобильность 2,3 · кор 3,5 · ролик 4 · приоритет 4,5 · локоть 2,0 — умножается на вес и время.</p>';
+      h+='<div style="margin-top:10px">';
+      ws2.slice().sort(function(a,b){return a.s-b.s;}).forEach(function(x){
+        h+='<div class="kv"><span>'+dwd(x.s)+' · '+(DAYS[x.day]?DAYS[x.day].t:x.day)+'</span><b>'+kcalOf(x)+'</b></div>';
+      });
+      h+='</div>';
+    }
+    h+='<div class="btns" style="margin:12px 0 0"><button class="sm" data-a="bad" data-w="'+statWk+'">'+
+       (S.bad[statWk]?'Снять «трудную неделю»':'Отметить трудной неделей')+'</button></div>';
+    h+='<p class="note-s">Трудная неделя оценивается по урезанному плану: зал 1, мобильность 2, кор 1, локоть 5. Приходить вполсилы лучше, чем не приходить.</p>';
+    h+='</div>';
+  }
+
+  /* ---- питание ---- */
+  var nWk=statWk!==null?statWk:tw,N=nutrition(nWk);
+  h+='<h4>Питание</h4><p class="sub">Норма на день для недели с '+dstr(nWk)+'. Считается от твоего веса, шагов и реального расхода на тренировки — не по общей таблице.</p>';
+  h+='<div class="wbox"><div style="text-align:center;margin-bottom:12px">'+
+     '<span class="tgtbig">'+N.target+'</span><div style="font-size:13px;color:var(--mut)">ккал в день, чтобы набирать</div></div>'+
+     '<div class="macro"><div><b>'+N.prot+'</b><span>белок, г</span></div>'+
+     '<div><b>'+N.fat+'</b><span>жиры, г</span></div><div><b>'+N.carb+'</b><span>углеводы, г</span></div></div>';
+  h+='<div class="kv"><span>Основной обмен · 180 см, 35 лет, '+fmtW(N.w)+' кг</span><b>'+N.bmr+'</b></div>'+
+     '<div class="kv"><span>Быт и сон, без шагов и тренировок</span><b>'+N.base+'</b></div>'+
+     '<div class="kv"><span>Шаги · '+N.steps+' в день'+(N.padSteps?' (минус '+N.padSteps+' с корта)':'')+'</span><b>+'+N.stepK+'</b></div>'+
+     '<div class="kv"><span>Тренировки · '+N.train+' ккал за неделю</span><b>+'+N.perDay+'</b></div>'+
+     '<div class="kv tot"><span>Расход в день</span><b>'+N.tdee+'</b></div>'+
+     '<div class="kv"><span>Избыток на набор</span><b>+'+N.surplus+'</b></div>';
+  h+='<p class="note-s">'+N.why.charAt(0).toUpperCase()+N.why.slice(1)+'.</p>';
+  nutriAdvice(N,nWk).forEach(function(t){h+='<p class="note-s">— '+t+'</p>';});
+  h+='</div>';
 
   /* группы */
   var gN=groupWeek(tw),gP=groupWeek(pw);
@@ -1316,11 +1842,28 @@ function renderStat(){
       '<div class="track" style="margin-top:3px;height:4px"><i class="pw" style="width:'+(gP[g]/mx*100)+'%"></i></div></div>';
   });
 
+  /* тренд по группам за 8 недель */
+  var GT=groupTrend(8);
+  h+='<h4>Тренд за 8 недель</h4><p class="sub">Подходы по группам по неделям. Последний столбец — эта неделя. Стрелка сравнивает последние четыре недели с предыдущими четырьмя.</p>';
+  h+='<div class="scroll"><table><tr><th>Группа</th>'+
+     GT.wks.map(function(w){return '<th style="text-align:center">'+dstr(w)+'</th>';}).join('')+'<th></th></tr>';
+  GROUPS.forEach(function(g){
+    var vals=GT.by.map(function(b){return b[g];});
+    var a1=vals.slice(0,4).reduce(function(a,b){return a+b;},0);
+    var a2=vals.slice(4).reduce(function(a,b){return a+b;},0);
+    var ar=a2>a1?'<span style="color:var(--ok)">▲</span>':(a2<a1?'<span style="color:var(--stop)">▼</span>':'<span style="color:var(--dim)">=</span>');
+    h+='<tr><td>'+g+'</td>'+vals.map(function(x,i){
+      return '<td class="n" style="text-align:center'+(i===7?';color:var(--tx)':'')+'">'+(x||'·')+'</td>';
+    }).join('')+'<td style="text-align:center">'+ar+'</td></tr>';
+  });
+  h+='</table></div>';
+
   /* план */
-  h+='<h4>План на неделю</h4><p class="sub">Сколько нужно, чтобы неделя считалась выполненной, и сколько уже сделано.</p><div class="scroll"><table>'+
+  h+='<h4>План на неделю</h4><p class="sub">Сколько нужно, чтобы неделя считалась выполненной, и сколько уже сделано. Правка плана меняет только текущую и будущие недели — прошлые уже зафиксированы.</p><div class="scroll"><table>'+
      '<tr><th>Что</th><th style="text-align:center">Сделано</th><th>План</th></tr>'+
      planRow('gym','Зал (день A + день B)')+planRow('mob','Мобильность')+planRow('core','Кор и спина')+
-     planRow('wheel','Ролик')+planRow('prio','Приоритет')+'</table></div>';
+     planRow('wheel','Ролик')+planRow('prio','Приоритет')+planRow('elbow','Локоть')+
+     planRow('padel','Падел')+'</table></div>';
 
   /* всего */
   if(S.log.length){
@@ -1335,13 +1878,31 @@ function renderStat(){
     S.log.map(function(x,i){return {x:x,i:i};}).reverse().slice(0,30).forEach(function(o){
       var x=o.x,isG=(x.type||DAYS[x.day].type)==='gym';
       h+='<div class="hist" data-edit="'+o.i+'" style="cursor:pointer"><span class="hd'+(isG?'':' h')+'">'+(isG?x.day:'•')+'</span><span class="hb"><b>'+(DAYS[x.day]?DAYS[x.day].t:x.day)+' · '+dwd(x.s)+'</b>'+
-        '<span>'+dur(x.f-x.s)+' · '+countSets(x)+' подх.'+(tonnage(x)?' · '+Math.round(tonnage(x))+' кг':'')+(x.kcal?' · '+x.kcal+' ккал':'')+'</span>'+
+        '<span>'+dur(x.f-x.s)+(countSets(x)?' · '+countSets(x)+' подх.':'')+(tonnage(x)?' · '+Math.round(tonnage(x))+' кг':'')+' · '+kcalOf(x)+' ккал</span>'+
         (x.note?'<span style="color:var(--dim);font-family:inherit">'+esc(x.note)+'</span>':'')+'</span></div>';
     });
     h+='<button class="big dan gap" data-a="dellast">Удалить последнюю тренировку</button>';
   }
 
-  h+='<h4>Данные</h4><p class="sub">Хранятся только в этом браузере, на телефоне. Никуда не отправляются. Делай копию хотя бы раз в месяц.</p>'+
+  /* ---- облако ---- */
+  h+='<h4>Синхронизация с GitHub</h4>'+
+     '<p class="sub">Данные уезжают в твой приватный репозиторий после каждой тренировки. На новом телефоне впиши те же три поля и нажми «Загрузить» — всё вернётся.</p>';
+  var sst=S.sync.err?'er':(S.sync.at?'ok':'no');
+  var smsg=S.sync.err?('Последняя ошибка: '+esc(S.sync.err))
+          :(S.sync.at?('Последняя выгрузка: '+dwd(S.sync.at)+', '+pad(new Date(S.sync.at).getHours())+':'+pad(new Date(S.sync.at).getMinutes()))
+                     :'Пока не настроена — данные живут только в этом браузере');
+  h+='<div class="syncst '+sst+'">'+smsg+'</div>';
+  h+='<label class="mlab">Репозиторий<em>владелец/название приватного репозитория под данные</em></label>'+
+     '<input class="txt" id="syrepo" value="'+esc(S.sync.repo)+'" placeholder="gusakovdoc/zal-data" autocapitalize="off" autocorrect="off">';
+  h+='<label class="mlab">Файл<em>путь внутри репозитория</em></label>'+
+     '<input class="txt" id="sypath" value="'+esc(S.sync.path||'data.json')+'" autocapitalize="off" autocorrect="off">';
+  h+='<label class="mlab">Токен<em>fine-grained PAT с правом Contents: Read and write только на этот репозиторий. В выгрузку и в репозиторий не попадает.</em></label>'+
+     '<input class="txt" id="sytok" type="password" value="'+esc(S.sync.tok)+'" placeholder="github_pat_..." autocapitalize="off" autocorrect="off">';
+  h+='<div class="btns"><button class="sm" data-a="sysave">Сохранить</button>'+
+     '<button class="sm" data-a="syup">Выгрузить сейчас</button>'+
+     '<button class="sm" data-a="sydown">Загрузить с GitHub</button></div>';
+
+  h+='<h4>Данные</h4><p class="sub">Локальная копия на случай, если синхронизация не настроена. Токен в выгрузку не попадает.</p>'+
      '<div class="btns"><button class="sm" data-a="exp">Копия (JSON)</button><button class="sm" data-a="expcsv">Таблица (CSV)</button>'+
      '<button class="sm" data-a="expai">Отчёт для Claude</button><button class="sm" data-a="imp">Восстановить</button></div>'+
      '<textarea class="io" id="io" placeholder="Сюда попадёт выгрузка — выдели и скопируй. Чтобы восстановить, вставь сюда сохранённый JSON и нажми «Восстановить»."></textarea>'+
@@ -1366,8 +1927,96 @@ function bindPlan(){
   });
 }
 
+/* ============ ОБЛАКО: GITHUB ============
+   Токен хранится только в этом браузере и намеренно не входит в dump() —
+   иначе он уехал бы в сам репозиторий вместе с данными. */
+function b64(s){
+  var by=new TextEncoder().encode(s),bin='';
+  for(var i=0;i<by.length;i++)bin+=String.fromCharCode(by[i]);
+  return btoa(bin);
+}
+function unb64(s){
+  var bin=atob(String(s).replace(/\s/g,'')),a=new Uint8Array(bin.length);
+  for(var i=0;i<bin.length;i++)a[i]=bin.charCodeAt(i);
+  return new TextDecoder().decode(a);
+}
+function ghUrl(){return 'https://api.github.com/repos/'+S.sync.repo.replace(/^\/+|\/+$/g,'')+'/contents/'+(S.sync.path||'data.json');}
+function ghHead(json){
+  var h={'Authorization':'Bearer '+S.sync.tok,'Accept':'application/vnd.github+json'};
+  if(json)h['Content-Type']='application/json';
+  return h;
+}
+function cloudReady(){return !!(S.sync.tok&&S.sync.repo);}
+function syncErr(e,quiet,what){
+  S.sync.err=String((e&&e.message)||e);save();
+  if(!quiet){toast(what+': '+S.sync.err);renderStatIfOpen();}
+  return false;
+}
+function renderStatIfOpen(){if(document.getElementById('v-stat').classList.contains('on'))renderStat();}
+
+function cloudPush(quiet){
+  if(!cloudReady())return Promise.resolve(false);
+  var body=dump();
+  /* сначала узнаём sha текущего файла: GitHub требует его для перезаписи */
+  return fetch(ghUrl(),{headers:ghHead()})
+    .then(function(r){return r.status===200?r.json():null;})
+    .catch(function(){return null;})
+    .then(function(cur){
+      var pl={message:'Зал: '+iso(Date.now())+', тренировок '+S.log.length,content:b64(body)};
+      if(cur&&cur.sha)pl.sha=cur.sha;
+      return fetch(ghUrl(),{method:'PUT',headers:ghHead(true),body:JSON.stringify(pl)});
+    })
+    .then(function(r){
+      if(!r.ok)return r.text().then(function(t){
+        var m='HTTP '+r.status;
+        try{m=JSON.parse(t).message||m;}catch(e){}
+        throw new Error(m);
+      });
+      S.sync.at=Date.now();S.sync.err='';S.backupAt=Date.now();save();
+      if(!quiet){toast('Выгружено в GitHub');renderStatIfOpen();}
+      return true;
+    })
+    .catch(function(e){return syncErr(e,quiet,'Не выгрузилось');});
+}
+function cloudPull(){
+  if(!cloudReady()){toast('Сначала впиши репозиторий и токен');return;}
+  fetch(ghUrl(),{headers:ghHead()})
+    .then(function(r){
+      if(!r.ok)return r.text().then(function(t){
+        var m='HTTP '+r.status;
+        try{m=JSON.parse(t).message||m;}catch(e){}
+        throw new Error(m);
+      });
+      return r.json();
+    })
+    .then(function(j){
+      var d=JSON.parse(unb64(j.content));
+      if(!d||!Array.isArray(d.log))throw new Error('файл не похож на копию данных');
+      applyDump(d);
+      S.sync.at=Date.now();S.sync.err='';save();
+      renderWork();renderStatIfOpen();
+      toast('Загружено: '+S.log.length+' тренировок, '+S.body.length+' замеров');
+    })
+    .catch(function(e){syncErr(e,false,'Не загрузилось');});
+}
+function saveSync(){
+  S.sync.repo=document.getElementById('syrepo').value.trim().replace(/^https?:\/\/github\.com\//,'');
+  S.sync.path=document.getElementById('sypath').value.trim()||'data.json';
+  S.sync.tok=document.getElementById('sytok').value.trim();
+  S.sync.err='';save();renderStat();
+  toast(cloudReady()?'Настройки сохранены. Проверь кнопкой «Выгрузить сейчас»':'Заполни репозиторий и токен');
+}
+
 /* ============ ЭКСПОРТ ============ */
-function dump(){return JSON.stringify({v:2,log:S.log,body:S.body,custom:S.custom,setsOv:S.setsOv,plan:S.plan});}
+function fixPlan(){Object.keys(PLAN0).forEach(function(k){if(S.plan[k]===undefined)S.plan[k]=PLAN0[k];});}
+function applyDump(d){
+  S.log=d.log||[];S.body=d.body||[];S.custom=d.custom||{};S.setsOv=d.setsOv||{};
+  if(d.plan)S.plan=d.plan;
+  S.planHist=d.planHist||{};S.bad=d.bad||{};
+  fixPlan();
+}
+function dump(){return JSON.stringify({v:3,log:S.log,body:S.body,custom:S.custom,setsOv:S.setsOv,
+  plan:S.plan,planHist:S.planHist,bad:S.bad});}
 function dl(name,text,mime){
   try{
     var b=new Blob([text],{type:mime||'application/json'}),u=URL.createObjectURL(b),a=document.createElement('a');
@@ -1375,13 +2024,18 @@ function dl(name,text,mime){
     setTimeout(function(){URL.revokeObjectURL(u);a.remove();},400);return true;
   }catch(e){return false;}
 }
-function doExport(){var t=dump();document.getElementById('io').value=t;dl('zal-'+iso(Date.now())+'.json',t);toast('Копия в поле ниже. Если файл не скачался — скопируй текст');}
+function doExport(){var t=dump();document.getElementById('io').value=t;dl('zal-'+iso(Date.now())+'.json',t);S.backupAt=Date.now();save();toast('Копия в поле ниже. Если файл не скачался — скопируй текст');}
 function doCsv(){
-  var rows=['Дата;День;Тип;Упражнение;Подход;Вес;Повторы'];
+  var rows=['Дата;День;Тип;Упражнение;Подход;Вес;Повторы;Запас;Ккал'];
   S.log.slice().sort(function(a,b){return a.s-b.s;}).forEach(function(x){
+    var nm=DAYS[x.day]?DAYS[x.day].t:x.day,tp=typeOf(x);
+    if(!Object.keys(x.e).length){
+      rows.push([iso(x.s),nm,tp,'—','','','','',kcalOf(x)].join(';'));return;
+    }
     Object.keys(x.e).forEach(function(k){
       x.e[k].forEach(function(s,i){
-        rows.push([iso(x.s),DAYS[x.day]?DAYS[x.day].t:x.day,(x.type||'gym'),(EX[k]?EX[k].name:k),i+1,String(s.w).replace('.',','),s.r].join(';'));
+        rows.push([iso(x.s),nm,tp,(EX[k]?EX[k].name:k),i+1,String(s.w).replace('.',','),s.r,
+                   (s.q===undefined||s.q===null?'':s.q),(i===0?kcalOf(x):'')].join(';'));
       });
     });
   });
@@ -1407,7 +2061,9 @@ function doAi(){
     var m=EX[id],rr=[];
     S.log.forEach(function(x){
       var e=x.e[id];if(!e||!e.length)return;
-      rr.push(dstr(x.s)+': '+e.map(function(s){return m.noW?s.r:fmtW(s.w)+'×'+s.r;}).join(' '));
+      rr.push(dstr(x.s)+': '+e.map(function(s){
+        return (m.noW?String(s.r):fmtW(s.w)+'×'+s.r)+(s.q!==undefined&&s.q!==null?'@'+s.q:'');
+      }).join(' '));
     });
     if(rr.length)L.push('• '+m.name+' ['+m.grp+']\n   '+rr.slice(-8).join('\n   '));
   });
@@ -1417,14 +2073,27 @@ function doAi(){
     L.push('  '+r.d+': '+BODY.filter(function(f){return r[f.k]!==undefined;}).map(function(f){return f.n+' '+fmtW(r[f.k])+f.u;}).join(', '));
   });
   L.push('');
+  var stuck=[];
+  Object.keys(EX).forEach(function(k){var n=plateau(k);if(n)stuck.push(EX[k].name+' — '+n+' нед');});
+  if(stuck.length){L.push('ЗАСТОЙ (лучший e1RM не растёт)');stuck.forEach(function(s){L.push('  '+s);});L.push('');}
+
   L.push('НЕДЕЛИ (статус: g=по плану, y=пропущено дома, r=пропущен зал)');
   var seen={};
   S.log.slice().reverse().forEach(function(x){
     var wk=weekKey(x.s);if(seen[wk])return;seen[wk]=1;
     var ss=S.log.filter(function(y){return weekKey(y.s)===wk;});
-    var g=ss.filter(function(y){return (y.type||DAYS[y.day].type)==='gym';}).length;
-    L.push('  неделя с '+dstr(wk)+': зал '+g+', дома '+(ss.length-g)+', ккал '+ss.reduce(function(a,y){return a+(y.kcal||0);},0)+' — '+weekStatus(wk));
+    var g=ss.filter(function(y){return typeOf(y)==='gym';}).length;
+    var hm=ss.filter(function(y){return typeOf(y)==='home';}).length;
+    var pd=ss.filter(function(y){return typeOf(y)==='padel';}).length;
+    L.push('  с '+dstr(wk)+': зал '+g+', дома '+hm+', падел '+pd+', ккал '+weekKcal(wk)+
+           (S.bad[wk]?', ТРУДНАЯ НЕДЕЛЯ':'')+' — '+weekStatus(wk));
   });
+  L.push('');
+  var Nn=nutrition(weekKey(Date.now()));
+  L.push('ПИТАНИЕ, расчёт на текущую неделю');
+  L.push('  вес '+fmtW(Nn.w)+' кг, шаги '+Nn.steps+'/день, расход '+Nn.tdee+' ккал, цель '+Nn.target+' ккал');
+  L.push('  белок '+Nn.prot+' г, жиры '+Nn.fat+' г, углеводы '+Nn.carb+' г');
+  L.push('  темп веса: '+(Nn.rate===null?'мало данных':(Nn.rate>=0?'+':'')+fmtW(Nn.rate)+' кг/нед'));
   var t=L.join('\n');
   document.getElementById('io').value=t;
   dl('otchet-'+iso(Date.now())+'.txt',t,'text/plain');
@@ -1436,8 +2105,7 @@ function doImport(){
   try{
     var d=JSON.parse(t);
     if(!d||!Array.isArray(d.log))throw 0;
-    S.log=d.log;S.body=d.body||[];S.custom=d.custom||{};S.setsOv=d.setsOv||{};
-    if(d.plan)S.plan=d.plan;
+    applyDump(d);
     save();renderStat();toast('Загружено: '+S.log.length+' тренировок, '+S.body.length+' замеров');
   }catch(e){toast('Не похоже на копию данных');}
 }
@@ -1464,11 +2132,17 @@ store.get('gym:v2').then(function(d){
   S.active=d.active||null;S.log=d.log||[];S.body=d.body||[];
   S.custom=d.custom||{};S.setsOv=d.setsOv||{};
   if(d.plan)S.plan=d.plan;
+  S.planHist=d.planHist||{};S.bad=d.bad||{};
+  if(d.sync)S.sync=d.sync;
+  S.backupAt=d.backupAt||0;
   boot(false);
 });
 function boot(migrated){
+  fixPlan();
+  if(S.sync.path===undefined)S.sync.path='data.json';
   if(S.active){
     if(!S.active.w)S.active.w={};
+    if(!S.active.swap)S.active.swap={};
     if(S.active.pAcc===undefined)S.active.pAcc=0;
     delete S.active.acc;delete S.active.seen;delete S.active.paused;
     accSaveAt=Date.now();
@@ -1476,10 +2150,16 @@ function boot(migrated){
   renderWork();
   paintRest();
   if(S.active){
-    setClock(true);
+    setClock(true);wakeOn();
     toast('Тренировка восстановлена: '+Math.round(bumpElapsed()/60000)+' мин'+(isPaused()?' (пауза)':''));
   }
   else if(migrated&&S.log.length)toast('Данные из прошлой версии перенесены');
+}
+/* офлайн-режим */
+if('serviceWorker' in navigator){
+  window.addEventListener('load',function(){
+    navigator.serviceWorker.register('sw.js').catch(function(){});
+  });
 }
 </script>
 </body>
