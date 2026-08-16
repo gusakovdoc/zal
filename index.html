@@ -944,24 +944,31 @@ function advMarkSeen(){if(S.advice&&S.advice.at&&S.advSeen!==S.advice.at){S.advS
 function adviceHtml(){
   var A=S.advice;
   if(!A||(!A.note&&!(A.general&&A.general.length)))return '';
+  var at=A.at||'';
+  /* Каждый пункт разбора — отдельная карточка: смахивается по одному,
+     а не весь блок целиком. Подпись у всех общая — дата разбора,
+     поэтому новый разбор возвращает сразу все пункты. */
   var body='';
-  if(A.note)body+='<div class="adv">'+esc(A.note)+'</div>';
-  (A.general||[]).forEach(function(g){
-    body+='<div class="adv">'+(g.t?'<b>'+esc(g.t)+'</b>':'')+esc(g.b||'')+'</div>';
+  if(A.note)body+=card('adv:note',at,'<div class="adv">'+esc(A.note)+'</div>');
+  (A.general||[]).forEach(function(g,i){
+    body+=card('adv:'+i,at,'<div class="adv">'+(g.t?'<b>'+esc(g.t)+'</b>':'')+esc(g.b||'')+'</div>');
   });
-  return card('adv',A.at||'',
-    '<button class="advbtn'+(advOpen?' on':'')+'" data-a="advtog">'+
+  /* все пункты смахнуты — шапка без содержимого не нужна */
+  if(!body)return '';
+  return '<button class="advbtn'+(advOpen?' on':'')+'" data-a="advtog">'+
     '<span class="advtag">РАЗБОР CLAUDE</span>'+
-    '<span class="d">'+esc(A.at||'')+(advFresh()?' · <em>новый</em>':'')+'</span></button>'+
-    '<div class="advbox'+(advOpen?' on':'')+'">'+body+'</div>','advwrap');
+    '<span class="d">'+esc(at)+(advFresh()?' · <em>новый</em>':'')+'</span></button>'+
+    '<div class="advbox'+(advOpen?' on':'')+'">'+body+'</div>';
 }
 /* Карточка, которую можно смахнуть. sig — отпечаток данных: пока он тот же,
    смахнутая карточка не возвращается; изменились данные — появится снова. */
+var hidCount=0;
 function card(id,sig,html,cls){
-  if(S.dismissed[id]===String(sig))return '';
+  if(S.dismissed[id]===String(sig)){hidCount++;return '';}
   return '<div class="'+(cls||'tipwrap')+'" data-tip="'+id+'" data-sig="'+esc(String(sig))+'">'+html+'</div>';
 }
 function hintsHtml(){
+  hidCount=0;
   var out=adviceHtml()+'<div class="tips">';
   var wk=weekKey(Date.now());
   var d=daysSince();
@@ -1020,7 +1027,11 @@ function hintsHtml(){
   /* 5. Совет дня — меняется раз в сутки, смахнутый вернётся завтра */
   var fday=Math.floor(Date.now()/864e5);
   out+=card('fact',fday,'<div class="tip fact"><b>Совет дня</b>'+FACTS[fday%FACTS.length]+'</div>');
-  return out+'</div>';
+  out+='</div>';
+  /* hidCount посчитан всеми вызовами card() выше — это ровно то,
+     что скрыто прямо сейчас, а не всё когда-либо смахнутое */
+  if(hidCount) out+='<div class="btns" style="margin:-6px 0 16px"><button class="sm" data-a="undis">Вернуть скрытые · '+hidCount+'</button></div>';
+  return out;
 }
 
 /* ============ ЗВУК ============ */
@@ -1533,6 +1544,7 @@ document.addEventListener('click',function(ev){
     return;}
   if(a==='note'){openNote(b.closest('.ex').dataset.ex);return;}
   if(a==='nsave'){saveNote();return;}
+  if(a==='undis'){S.dismissed={};save();renderWork();window.scrollTo(0,0);toast('Скрытые карточки возвращены');return;}
   if(a==='advtog'){advOpen=!advOpen;if(!advOpen)advMarkSeen();renderWork();return;}
   if(a==='fold'){var fx=b.closest('.ex').dataset.ex;openEx[fx]=!openEx[fx];renderWork();return;}
   if(a==='swap'){openSwap(b.closest('.ex').dataset.item);return;}
