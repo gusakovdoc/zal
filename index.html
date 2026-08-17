@@ -681,13 +681,13 @@ var PLAN0={gym:2,mob:5,core:3,wheel:2,prio:2,elbow:5,padel:2};
 var PLANMIN={gym:1,mob:2,core:1,wheel:0,prio:0,elbow:5,padel:0};
 var S={active:null,log:[],body:[],custom:{},setsOv:{},plan:copy(PLAN0),
        planHist:{},bad:{},sync:{tok:'',repo:'',path:'data.json',at:0,err:''},backupAt:0,
-       gain:'hard',advice:null,advSeen:'',dismissed:{}};
+       gain:'hard',advice:null,advSeen:'',dismissed:{},weekOk:{}};
 var tick=null,calM=null,statWk=null;
 function copy(o){var r={};Object.keys(o).forEach(function(k){r[k]=o[k];});return r;}
 
 function save(){store.set('gym:v2',{active:S.active,log:S.log,body:S.body,custom:S.custom,setsOv:S.setsOv,
   plan:S.plan,planHist:S.planHist,bad:S.bad,sync:S.sync,backupAt:S.backupAt,
-  gain:S.gain,advice:S.advice,advSeen:S.advSeen,dismissed:S.dismissed});}
+  gain:S.gain,advice:S.advice,advSeen:S.advSeen,dismissed:S.dismissed,weekOk:S.weekOk});}
 function toast(m,pr){
   var t=document.getElementById('toast');
   t.textContent=m;t.className='toast on'+(pr?' pr':'');
@@ -752,17 +752,30 @@ function planDone(k,wk){
 }
 function typeOf(x){return x.type||(DAYS[x.day]?DAYS[x.day].type:'home');}
 function homeNeed(p){return p.mob+p.core+p.wheel+p.prio+p.elbow;}
-/* План недели замораживается в момент, когда в эту неделю пишется тренировка.
-   Поэтому смена плана сегодня не переоценивает задним числом прошлые недели. */
+/* Текущая и будущие недели живут по актуальному плану, прошлые — по снимку,
+   сделанному, пока неделя ещё шла. Поэтому правка плана сегодня не может
+   переоценить задним числом уже прожитую неделю. */
 function planFor(wk){
   if(S.bad[wk])return PLANMIN;
-  if(S.planHist[wk])return S.planHist[wk];
-  return S.plan;
+  if(wk>=weekKey(Date.now()))return S.plan;
+  return S.planHist[wk]||S.plan;
 }
 function freezePlan(wk){
   var p=copy(S.plan);
   Object.keys(PLAN0).forEach(function(k){if(p[k]===undefined)p[k]=PLAN0[k];});
   S.planHist[wk]=p;
+}
+/* Недели, прожитые до появления заморозки, снимка не имеют — из-за этого их
+   статус пересчитывался при каждой правке плана. Закрепляем их один раз
+   текущим планом: другого достоверного значения для прошлого уже нет. */
+function backfillPlans(){
+  var cur=weekKey(Date.now()),seen={},changed=false;
+  S.log.forEach(function(x){seen[weekKey(x.s)]=1;});
+  Object.keys(seen).map(Number).forEach(function(wk){
+    if(wk>=cur||S.planHist[wk])return;
+    freezePlan(wk);changed=true;
+  });
+  return changed;
 }
 
 /* ---- Калории ----
@@ -1565,6 +1578,8 @@ document.addEventListener('click',function(ev){
     else arm(b,'Удалить последнюю?');return;}
   if(a==='cal'){calM=+b.dataset.m;renderStat();return;}
   if(a==='wsel'){var sw=+b.dataset.w;statWk=(statWk===sw)?null:sw;renderStat();return;}
+  if(a==='okwk'){var ow=+b.dataset.w;if(S.weekOk[ow])delete S.weekOk[ow];else S.weekOk[ow]=1;
+    save();cloudPush(true);renderStat();toast(S.weekOk[ow]?'Неделя зачтена как выполненная':'Зачёт снят');return;}
   if(a==='bad'){var bw=+b.dataset.w;if(S.bad[bw])delete S.bad[bw];else S.bad[bw]=1;save();renderStat();
     toast(S.bad[bw]?'Неделя отмечена трудной — план урезан':'Обычный план возвращён');return;}
   if(a==='sec'){var sk=b.dataset.s;openSec[sk]=!openSec[sk];renderStat();return;}
@@ -1888,6 +1903,9 @@ function strengthIndex(){
   return pts;
 }
 function weekStatus(wk){
+  /* ручной зачёт перекрывает расчёт: бывает, что неделя закрыта по факту,
+     а план тогда выглядел иначе, чем сейчас */
+  if(S.weekOk[wk])return 'g';
   var ss=S.log.filter(function(x){return weekKey(x.s)===wk;});
   if(!ss.length&&wk>=weekKey(Date.now()))return 'n';
   var P=planFor(wk);
@@ -2108,9 +2126,15 @@ function renderStat(){
       });
       wb+='</div>';
     }
-    wb+='<div class="btns" style="margin:12px 0 0"><button class="sm" data-a="bad" data-w="'+statWk+'">'+
-        (S.bad[statWk]?'Снять «трудную неделю»':'Отметить трудной неделей')+'</button></div>';
-    wb+='<p class="note-s">Трудная неделя оценивается по урезанному плану: зал 1, мобильность 2, кор 1, локоть 5. Приходить вполсилы лучше, чем не приходить.</p>';
+    var frozen=!!S.planHist[statWk],past=statWk<tw;
+    wb+='<div class="btns" style="margin:12px 0 0">'+
+        '<button class="sm" data-a="okwk" data-w="'+statWk+'">'+(S.weekOk[statWk]?'Снять зачёт':'Зачесть выполненной')+'</button>'+
+        '<button class="sm" data-a="bad" data-w="'+statWk+'">'+(S.bad[statWk]?'Снять «трудную»':'Отметить трудной')+'</button></div>';
+    wb+='<p class="note-s">'+
+        (past?(frozen?'План этой недели закреплён: зал '+planFor(statWk).gym+', дома '+homeNeed(planFor(statWk))+'. Правка плана его больше не изменит.'
+                     :'Неделя ещё не закреплена.')
+             :'Неделя идёт — считается по текущему плану и закрепится, когда закончится.')+'</p>';
+    wb+='<p class="note-s">Зачёт вручную ставит неделе «выполнено» независимо от плана — на случай, когда неделя закрыта по факту, а план тогда выглядел иначе. Трудная неделя, наоборот, оценивается по урезанному плану: зал 1, мобильность 2, кор 1.</p>';
     h+=sec('wk','Неделя '+dstr(statWk)+' — '+dstr(statWk+6*864e5),wtot+' ккал','<div class="wbox">'+wb+'</div>');
   }
 
@@ -2238,7 +2262,11 @@ function bindPlan(){
   document.querySelectorAll('[data-a="pl"]').forEach(function(b){
     b.addEventListener('click',function(){
       var k=b.dataset.k,nv=Math.max(0,Math.min(14,S.plan[k]+ +b.dataset.s));
-      S.plan[k]=nv;save();renderStat();
+      S.plan[k]=nv;
+      /* снимок текущей недели держим в актуальном состоянии: когда неделя
+         закончится, закреплённым останется именно то, что было в конце */
+      freezePlan(weekKey(Date.now()));
+      save();renderStat();
     });
   });
 }
@@ -2372,14 +2400,14 @@ function fixPlan(){Object.keys(PLAN0).forEach(function(k){if(S.plan[k]===undefin
 function applyDump(d){
   S.log=d.log||[];S.body=d.body||[];S.custom=d.custom||{};S.setsOv=d.setsOv||{};
   if(d.plan)S.plan=d.plan;
-  S.planHist=d.planHist||{};S.bad=d.bad||{};
+  S.planHist=d.planHist||{};S.bad=d.bad||{};S.weekOk=d.weekOk||{};
   if(d.gain&&GAIN[d.gain])S.gain=d.gain;
-  fixPlan();
+  fixPlan();backfillPlans();
 }
 /* Советы сюда не входят: они живут в отдельном advice.json, который приложение
    только читает. Токен не входит тем более. */
 function dump(){return JSON.stringify({v:3,log:S.log,body:S.body,custom:S.custom,setsOv:S.setsOv,
-  plan:S.plan,planHist:S.planHist,bad:S.bad,gain:S.gain});}
+  plan:S.plan,planHist:S.planHist,bad:S.bad,weekOk:S.weekOk,gain:S.gain});}
 function dl(name,text,mime){
   try{
     var b=new Blob([text],{type:mime||'application/json'}),u=URL.createObjectURL(b),a=document.createElement('a');
@@ -2503,7 +2531,7 @@ store.get('gym:v2').then(function(d){
   S.active=d.active||null;S.log=d.log||[];S.body=d.body||[];
   S.custom=d.custom||{};S.setsOv=d.setsOv||{};
   if(d.plan)S.plan=d.plan;
-  S.planHist=d.planHist||{};S.bad=d.bad||{};
+  S.planHist=d.planHist||{};S.bad=d.bad||{};S.weekOk=d.weekOk||{};
   if(d.sync)S.sync=d.sync;
   S.backupAt=d.backupAt||0;
   if(d.gain&&GAIN[d.gain])S.gain=d.gain;
@@ -2512,6 +2540,8 @@ store.get('gym:v2').then(function(d){
 });
 function boot(migrated){
   fixPlan();
+  /* закрепляем прошлые недели, если они ещё не закреплены */
+  if(backfillPlans())save();
   advOpen=advFresh();
   if(S.sync.path===undefined)S.sync.path='data.json';
   if(S.active){
