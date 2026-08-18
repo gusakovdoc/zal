@@ -63,10 +63,10 @@ button{font-family:inherit;color:inherit;cursor:pointer}
 
 .nav{position:fixed;bottom:0;left:0;right:0;z-index:30;background:rgba(20,26,33,.82);backdrop-filter:blur(16px) saturate(1.3);-webkit-backdrop-filter:blur(16px) saturate(1.3);border-top:1px solid rgba(36,46,57,.9);display:flex;padding-bottom:env(safe-area-inset-bottom)}
 .nav button{position:relative;flex:1;background:none;border:0;padding:13px 2px 13px;font-family:"Barlow Condensed",sans-serif;font-weight:600;font-size:13.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--dim)}
-.nav button[aria-current="true"]{color:var(--ok)}
+.nav button[aria-current="true"]{color:var(--acc)}
 /* активная вкладка отмечена короткой чертой по центру, а не во всю ширину */
-.nav button::after{content:"";position:absolute;top:0;left:50%;transform:translateX(-50%);width:0;height:2px;border-radius:0 0 3px 3px;background:var(--ok);transition:width .18s}
-.nav button[aria-current="true"]::after{width:26px;box-shadow:0 0 10px rgba(85,188,138,.55)}
+.nav button::after{content:"";position:absolute;top:0;left:50%;transform:translateX(-50%);width:0;height:2px;border-radius:0 0 3px 3px;background:var(--acc);transition:width .18s}
+.nav button[aria-current="true"]::after{width:26px;box-shadow:0 0 10px rgba(241,129,62,.6)}
 
 .view{display:none;padding-top:16px}
 .view.on{display:block}
@@ -82,12 +82,14 @@ button{font-family:inherit;color:inherit;cursor:pointer}
 .pick .dd b{display:block;font-weight:600;font-size:16.5px;margin-bottom:2px;letter-spacing:-.005em}
 .pick .dd span{font-size:13px;color:var(--mut)}
 .pick .dd em{display:block;font-style:normal;font-size:12.5px;color:var(--dim);margin-top:3px}
-.hdr{font-family:"Barlow Condensed",sans-serif;font-weight:600;font-size:13px;letter-spacing:.18em;text-transform:uppercase;color:var(--dim);margin:0 0 9px;padding-left:2px}
+/* ДОМА · ЗАЛ · КОРТ — оранжевые: это опоры, по которым бегает глаз */
+.hdr{font-family:"Barlow Condensed",sans-serif;font-weight:600;font-size:13px;letter-spacing:.18em;text-transform:uppercase;color:var(--acc);margin:0 0 9px;padding-left:2px;display:flex;align-items:center;gap:9px}
+.hdr::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,rgba(241,129,62,.35),transparent)}
 
 .ex{background:var(--card);border:1px solid var(--line);border-radius:var(--r);margin-bottom:11px;overflow:hidden;box-shadow:var(--sh),var(--edge)}
 .ex.done{background:var(--ok-bg);border-color:var(--ok-br)}
 .exh{padding:13px 14px 9px;display:flex;gap:11px;align-items:flex-start}
-.exn{font-family:"Barlow Condensed",sans-serif;font-weight:700;font-size:21px;color:var(--dim);width:20px;flex:0 0 auto;line-height:1.15;padding-top:2px}
+.exn{font-family:"Barlow Condensed",sans-serif;font-weight:700;font-size:21px;color:var(--acc);width:20px;flex:0 0 auto;line-height:1.15;padding-top:2px}
 .ex.done .exn{color:var(--ok)}
 .ext{flex:1;min-width:0}
 .ext h3{font-size:16.5px;font-weight:600;margin:0 0 3px;line-height:1.25}
@@ -116,7 +118,7 @@ button{font-family:inherit;color:inherit;cursor:pointer}
 .rest{display:inline-block;background:var(--surf);border:1px solid var(--line);border-radius:999px;padding:4px 11px;font-family:"IBM Plex Mono",monospace;font-size:13px;color:var(--tx);margin-top:4px}
 
 .sets{padding:2px 10px 5px}
-.sect{font-family:"Barlow Condensed",sans-serif;font-weight:600;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);padding:7px 4px 3px}
+.sect{font-family:"Barlow Condensed",sans-serif;font-weight:600;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--acc);opacity:.85;padding:8px 4px 3px}
 .row{display:flex;align-items:center;gap:6px;padding:5px 4px;border-radius:var(--r-s)}
 .row.filled{background:rgba(85,188,138,.11)}
 .row.wu.filled{background:rgba(110,123,133,.13)}
@@ -277,7 +279,12 @@ textarea.small{height:74px}
 
 /* смахиваемые карточки: горизонталь перехватываем, вертикальную прокрутку оставляем */
 [data-tip]{touch-action:pan-y}
+/* совет дня — единственная карточка с тёплой подложкой, тон слабый,
+   чтобы серый текст поверх читался так же легко */
+.tip.fact{background:linear-gradient(100deg,rgba(241,129,62,.09),var(--card) 58%)}
 .tip.fact b{display:block;font-family:"Barlow Condensed",sans-serif;font-weight:600;font-size:13px;letter-spacing:.13em;text-transform:uppercase;color:var(--acc);margin-bottom:4px}
+/* в календаре оранжевый не используем: он слишком близок к красному,
+   а там жёлтый и красный должны различаться с одного взгляда */
 
 /* нет сети */
 .offbar{position:sticky;top:0;z-index:29;background:rgba(43,36,21,.94);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:1px solid rgba(226,171,78,.55);color:var(--warn);font-size:13.5px;line-height:1.4;padding:10px 14px;text-align:center}
@@ -383,7 +390,7 @@ incline_db:{name:'Жим гантелей лёжа под наклоном',grp:
  hint:'Наклон 30°. Опускать до уровня ключиц, локти под 45°.',
  how:['Наклон скамьи 30°, не выше — 45° уводит нагрузку в передние дельты.','Сведи лопатки и прижми к скамье ДО того, как возьмёшь гантели. Держи так весь подход.','Локти под 45° к корпусу, не разводи на 90°.','Внизу гантели на уровне ключиц, короткая пауза. Вверху не сталкивай их друг с другом.'],
  watch:['Стопы на полу, поясница в естественном прогибе. Мост не выгибай.','Опускание контролируемое — растяжение груди внизу и есть основной стимул.']},
-cable_fly:{name:'Сведение рук в кроссовере',grp:'Грудь',start:18,step:2.5,e1:1,noIdx:1,rest:'60–90 сек',
+cable_fly:{name:'Сведение рук в кроссовере',grp:'Грудь',start:18,step:2.5,e1:1,rest:'60–90 сек',
  wu:[{p:.5,r:15}],
  hint:'Локоть согнут и зафиксирован. Руки сходятся чуть за среднюю линию.',
  how:['Блоки на уровне плеч или чуть ниже. Ноги раздельно, одна впереди.','Локти слегка согнуты и зафиксированы под одним углом весь подход.','Разведение 3 сек, в точке растяжения пауза 1 сек.','Своди руки чуть за среднюю линию, с лёгким перекрестом. Пауза 1 сек.'],
@@ -643,6 +650,11 @@ elbow:{t:'Локоть: восстановление',type:'home',mins:10,ex:[
 padel:{t:'Падел',type:'padel',mins:90,ex:[]}
 };
 var HOME_KEYS=['mob','core','wheel','prio','elbow'];
+/* Состав индекса силы выводится из самих тренировок, а не из флагов у
+   упражнений: весь зал плюс домашний «Приоритет», где тоже растут веса.
+   Добавил упражнение в день A — оно попало в индекс само. */
+var IDX_DAYS=['A','B','prio'],IDX_EX={};
+IDX_DAYS.forEach(function(k){DAYS[k].ex.forEach(function(x){IDX_EX[x.id]=1;});});
 var GROUPS=['Грудь','Спина','Бицепс','Трицепс','Дельты','Ноги','Пресс','Кор','Локоть'];
 var WD=['Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
 var MN=['январь','февраль','март','апрель','май','июнь','июль','август','сентябрь','октябрь','ноябрь','декабрь'];
@@ -748,14 +760,17 @@ function bodyW(){
   return w.length?w[w.length-1].w:82;
 }
 function setsOf(dayKey,item){return S.setsOv[item.id]||item.sets;}
-function e1rm(w,r,m){
-  if(!m.e1)return 0;
-  /* bw — вес тела целиком (подтягивания), bwf — его доля (отжимания ≈65%).
-     Остальное — только снаряд: для гантельных считаем на одну руку. */
+/* Числовая оценка подхода. Формула Эпли: вес × (1 + повторы/30).
+   bw — вес тела целиком (подтягивания), bwf — его доля (отжимания ≈65%).
+   Остальное — только снаряд: для гантельных считаем на одну руку. */
+function setScore(w,r,m){
   var base=w+(m.bw?bodyW():(m.bwf?bodyW()*m.bwf:0));
   if(!base||!r)return 0;
   return base*(1+r/30);
 }
+/* e1 управляет только показом «расчётного 1ПМ»: для махов или прогулки
+   фермера эта цифра бессмысленна, хотя прогресс в них считается наравне. */
+function e1rm(w,r,m){return m.e1?setScore(w,r,m):0;}
 function lastDone(exId,key){
   for(var i=S.log.length-1;i>=0;i--){var e=(S.log[i][key]||{})[exId];if(e&&e.length)return e;}
   return null;
@@ -1933,10 +1948,8 @@ function strengthIndex(){
   var base={},pts=[],best={};
   S.log.forEach(function(sess){
     Object.keys(sess.e).forEach(function(k){
-      /* noIdx — 1ПМ показываем, но в индекс не берём: изоляция и домашние
-         подсобные растят соотношение быстрее базы и перекашивают среднее. */
-      var m=EX[k];if(!m||!m.e1||m.noIdx)return;
-      var b=0;sess.e[k].forEach(function(s){var q=e1rm(s.w,s.r,m);if(q>b)b=q;});
+      var m=EX[k];if(!m||!IDX_EX[k])return;
+      var b=0;sess.e[k].forEach(function(s){var q=setScore(s.w,s.r,m);if(q>b)b=q;});
       if(!b)return;
       if(!base[k])base[k]=b;
       if(!best[k]||b>best[k])best[k]=b;
@@ -2106,7 +2119,7 @@ function renderStat(){
   var st=streak();
 
   var si=strengthIndex();
-  h+='<h4>Индекс силы</h4><p class="sub">Средний рост расчётного 1ПМ по всем базовым упражнениям. 100 — твой старт. Растёт только когда растут веса и повторы, объём сам по себе его не двигает.</p>';
+  h+='<h4>Индекс силы</h4><p class="sub">Средний рост по всем упражнениям зала и домашнего «Приоритета». 100 — твой старт. Растёт только когда растут веса и повторы, объём сам по себе его не двигает.</p>';
   h+='<div class="chart">'+lineChart(si,'#55BC8A','')+'</div>';
 
   var TP=planFor(tw);
