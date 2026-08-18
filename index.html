@@ -20,6 +20,7 @@
   --warn:#E2AB4E; --warn-bg:#2B2415;
   --stop:#E45B49; --stop-bg:#2C1816;
   --adv:#A78BFA; --adv-bg:#1B1730;
+  --acc:#F1813E; --acc-bg:#2B1A11;  /* оранжевый акцент: отсчёт, рекорд, совет дня */
   --ink:#080B0E;                    /* текст на цветной заливке */
   --r:14px; --r-s:10px; --r-x:7px;  /* радиусы: карточка, элемент, мелочь */
   --sh:0 1px 2px rgba(0,0,0,.5), 0 6px 18px -10px rgba(0,0,0,.8);
@@ -31,7 +32,8 @@ body{margin:0;color:var(--tx);font-family:"IBM Plex Sans",-apple-system,BlinkMac
   /* мягкое свечение сверху, чтобы фон не был плоским листом */
   background:var(--bg);
   background-image:radial-gradient(120% 55% at 50% -10%, rgba(85,188,138,.09), transparent 62%),
-                   radial-gradient(90% 45% at 100% 0%, rgba(104,172,236,.055), transparent 60%);
+                   radial-gradient(90% 45% at 100% 0%, rgba(104,172,236,.055), transparent 60%),
+                   radial-gradient(70% 40% at 0% 4%, rgba(241,129,62,.05), transparent 62%);
   background-attachment:fixed}
 .mono{font-family:"IBM Plex Mono",ui-monospace,monospace;font-variant-numeric:tabular-nums}
 .wrap{max-width:640px;margin:0 auto;padding:0 14px}
@@ -46,7 +48,8 @@ button{font-family:inherit;color:inherit;cursor:pointer}
 .clock.off{color:var(--dim)}
 .clock.pause{color:var(--warn)}
 .restbtn{background:var(--surf);border:1px solid var(--line);border-radius:999px;padding:8px 15px;font-family:"Barlow Condensed",sans-serif;font-weight:600;font-size:15px;letter-spacing:.07em;text-transform:uppercase;color:var(--mut);flex:0 0 auto;min-width:82px;box-shadow:var(--edge)}
-.restbtn.run{background:var(--dat);border-color:var(--dat);color:var(--ink);font-family:"IBM Plex Mono",monospace;font-weight:600;font-size:16px;letter-spacing:0;padding:8px 13px;box-shadow:0 0 0 4px rgba(104,172,236,.14)}
+/* идёт отсчёт — оранжевый, «пора» — зелёный: ждать против действовать */
+.restbtn.run{background:var(--acc);border-color:var(--acc);color:var(--ink);font-family:"IBM Plex Mono",monospace;font-weight:600;font-size:16px;letter-spacing:0;padding:8px 13px;box-shadow:0 0 0 4px rgba(241,129,62,.16)}
 .restbtn.fire{background:var(--ok);border-color:var(--ok);color:var(--ink);box-shadow:0 0 0 4px rgba(85,188,138,.18)}
 .row.timing{background:rgba(226,171,78,.16);box-shadow:inset 0 0 0 1px var(--warn)}
 .chk.timing{background:var(--warn);border-color:var(--warn);color:var(--ink);font-family:"IBM Plex Mono",monospace;font-weight:600;font-size:13px}
@@ -56,7 +59,7 @@ button{font-family:inherit;color:inherit;cursor:pointer}
 .tip b{color:var(--tx);font-weight:600}
 .tip.todo{border-left-color:var(--warn)}
 .tip.good{border-left-color:var(--ok)}
-.tip.fact{border-left-color:var(--dat)}
+.tip.fact{border-left-color:var(--acc)}
 
 .nav{position:fixed;bottom:0;left:0;right:0;z-index:30;background:rgba(20,26,33,.82);backdrop-filter:blur(16px) saturate(1.3);-webkit-backdrop-filter:blur(16px) saturate(1.3);border-top:1px solid rgba(36,46,57,.9);display:flex;padding-bottom:env(safe-area-inset-bottom)}
 .nav button{position:relative;flex:1;background:none;border:0;padding:13px 2px 13px;font-family:"Barlow Condensed",sans-serif;font-weight:600;font-size:13.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--dim)}
@@ -90,7 +93,7 @@ button{font-family:inherit;color:inherit;cursor:pointer}
 .ext h3{font-size:16.5px;font-weight:600;margin:0 0 3px;line-height:1.25}
 .tgt{font-family:"Barlow Condensed",sans-serif;font-weight:600;font-size:15px;letter-spacing:.05em;text-transform:uppercase;color:var(--dat)}
 .grp{color:var(--dim);margin-left:7px}
-.pr{display:inline-block;margin-left:6px;background:var(--ok);color:var(--ink);font-family:"Barlow Condensed",sans-serif;font-weight:700;font-size:12px;letter-spacing:.08em;padding:2px 7px;border-radius:999px;vertical-align:1px;box-shadow:0 0 12px rgba(85,188,138,.4)}
+.pr{display:inline-block;margin-left:6px;background:var(--acc);color:var(--ink);font-family:"Barlow Condensed",sans-serif;font-weight:700;font-size:12px;letter-spacing:.08em;padding:2px 7px;border-radius:999px;vertical-align:1px;box-shadow:0 0 14px rgba(241,129,62,.55)}
 .hint{font-size:13.5px;color:var(--mut);line-height:1.4;padding:0 14px 7px 45px;margin:0}
 .e1{font-family:"IBM Plex Mono",monospace;font-size:12.5px;color:var(--dat);padding:0 14px 8px 45px}
 .mynote{background:rgba(104,172,236,.09);border-left:2px solid var(--dat);margin:0 14px 9px 45px;padding:7px 10px;font-size:13.5px;color:var(--tx);border-radius:var(--r-x)}
@@ -274,7 +277,7 @@ textarea.small{height:74px}
 
 /* смахиваемые карточки: горизонталь перехватываем, вертикальную прокрутку оставляем */
 [data-tip]{touch-action:pan-y}
-.tip.fact b{display:block;font-family:"Barlow Condensed",sans-serif;font-weight:600;font-size:13px;letter-spacing:.13em;text-transform:uppercase;color:var(--dat);margin-bottom:4px}
+.tip.fact b{display:block;font-family:"Barlow Condensed",sans-serif;font-weight:600;font-size:13px;letter-spacing:.13em;text-transform:uppercase;color:var(--acc);margin-bottom:4px}
 
 /* нет сети */
 .offbar{position:sticky;top:0;z-index:29;background:rgba(43,36,21,.94);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:1px solid rgba(226,171,78,.55);color:var(--warn);font-size:13.5px;line-height:1.4;padding:10px 14px;text-align:center}
@@ -421,7 +424,7 @@ lat_raise:{name:'Махи гантелями в стороны',grp:'Дельт�
  note:'Разминка не нужна: плечи уже прогреты предыдущими упражнениями.'},
 farmer:{name:'Прогулка фермера одной рукой',grp:'Кор',start:24,step:2,unit:'сек',repdef:60,repstep:15,rest:'90 сек',
  hint:'Одна гантель. Корпус строго вертикально.',
- how:['Одна тяжёлая гантель, вторая рука свободна.','Корпус строго вертикально: не наклоняйся ни к грузу, ни от него.','Плечо опущено, лопатка зафиксирована. Шаг ровный.','1 минута, потом смена руки.'],
+ how:['Одна тяжёлая гантель, вторая рука свободна.','Корпус строго вертикально: не наклоняйся ни к грузу, ни от него.','Плечо опущено, лопатка зафиксирована. Шаг ровный.','1 минута на руку. Вторая рука — это следующий подход.'],
  watch:['Косые работают на противодействие боковому наклону — в этом весь смысл.','Две гантели этот эффект убивают: нагрузка становится симметричной.']},
 bench:{name:'Жим лёжа, штанга',grp:'Грудь',start:85,step:2.5,min:20,e1:1,rest:'3 мин',
  wu:[{p:.24,r:12},{p:.5,r:8},{p:.76,r:4},{p:.9,r:2}],
@@ -460,14 +463,14 @@ hanging_leg:{name:'Подъём ног в висе',grp:'Пресс',bw:1,start:
  note:'15/15/15 чисто → зажимай гантель 4 кг между стопами.'},
 pallof:{name:'Pallof press',grp:'Кор',start:15,step:5,repdef:11,rest:'45–60 сек',
  hint:'Стоишь боком к блоку. Выжимаешь и удерживаешь, корпус неподвижен.',
- how:['Встань боком к блоку, рукоять двумя руками у груди.','Выжми руки вперёд и удерживай 2–3 сек. Блок тянет тебя в поворот — ты сопротивляешься.','Вернись к груди. 10–12 повторов, потом другая сторона.'],
+ how:['Встань боком к блоку, рукоять двумя руками у груди.','Выжми руки вперёд и удерживай 2–3 сек. Блок тянет тебя в поворот — ты сопротивляешься.','Вернись к груди. 10–12 повторов. Другая сторона — следующий подход.'],
  watch:['Корпус не разворачивается ни на градус. Разворачивает — вес великоват.','Ноги на ширине плеч, колени мягкие, таз нейтрален.'],
  note:'Противодействие ротации без самой ротации. То, чем должны были быть русские повороты, но без нагрузки на диски.'},
 
 /* --- ДОМ: МОБИЛЬНОСТЬ --- */
 h_hip:{name:'Сгибатели бедра в выпаде',grp:'Мобильность',noW:1,unit:'сек',repdef:60,repstep:15,rest:'без паузы',
  hint:'Сначала подкрути таз, потом подай вес вперёд. 60 сек на сторону.',
- how:['Встань на одно колено, под колено полотенце. Передняя нога согнута под 90°.','Сначала подкрути таз: копчик вперёд-вверх, сожми ягодицу задней ноги.','Удерживая таз, подай вес вперёд. Смещение 2–3 см, не больше.','60 сек, потом смена ноги.'],
+ how:['Встань на одно колено, под колено полотенце. Передняя нога согнута под 90°.','Сначала подкрути таз: копчик вперёд-вверх, сожми ягодицу задней ноги.','Удерживая таз, подай вес вперёд. Смещение 2–3 см, не больше.','60 сек. Вторая нога — следующий подход.'],
  watch:['Тянуть должно спереди бедра задней ноги, у самого паха.','Корпус вертикально, не наваливайся.'],
  stop:'Тянет в пояснице — таз не подкручен. Начни заново.'},
 h_tspine:{name:'Грудной отдел на валике',grp:'Мобильность',noW:1,unit:'сек',repdef:20,repstep:10,rest:'без паузы',
@@ -477,16 +480,16 @@ h_tspine:{name:'Грудной отдел на валике',grp:'Мобильн
  stop:'Почувствовал поясницу — валик слишком низко, сдвинь выше.'},
 h_book:{name:'Открытая книга',grp:'Мобильность',noW:1,repdef:8,rest:'без паузы',
  hint:'Колени прижаты, разворачивается только грудная клетка.',
- how:['Ляг на бок, колени согнуты 90°, под верхнее колено подушка.','Руки вытянуты вперёд, ладонь на ладони.','На выдохе раскрывай верхнюю руку назад, взгляд за кистью.','Задержись 2 сек, вернись. 8 раз, потом другая сторона.'],
+ how:['Ляг на бок, колени согнуты 90°, под верхнее колено подушка.','Руки вытянуты вперёд, ладонь на ладони.','На выдохе раскрывай верхнюю руку назад, взгляд за кистью.','Задержись 2 сек, вернись. 8 раз. Другая сторона — следующий подход.'],
  watch:['Колени не отрываются друг от друга.','Веди грудной клеткой, а не тянись рукой.']},
 h_door:{name:'Грудные в дверном проёме',grp:'Мобильность',noW:1,unit:'сек',repdef:45,repstep:15,rest:'без паузы',
  hint:'Локоть на уровне плеча, 90°. Тянет у подмышки, не в суставе.',
- how:['Встань в проём, предплечье к косяку, локоть на уровне плеча, угол 90°.','Небольшой шаг вперёд той же ногой.','Мягко поверни корпус в сторону от руки. 45 сек, потом смена.'],
+ how:['Встань в проём, предплечье к косяку, локоть на уровне плеча, угол 90°.','Небольшой шаг вперёд той же ногой.','Мягко поверни корпус в сторону от руки. 45 сек. Вторая рука — следующий подход.'],
  watch:['Голова не выдвигается вперёд.','Растяжение по передней поверхности груди, у подмышки.'],
  stop:'Щиплет в переднюю часть плеча — опусти локоть на 10–15 см ниже.'},
 h_glute:{name:'Фигура 4 лёжа',grp:'Мобильность',noW:1,unit:'сек',repdef:45,repstep:15,
  hint:'Лодыжка на колене, подтягиваешь бедро к себе. Поясница прижата.',
- how:['Ляг на спину, колени согнуты, стопы на полу.','Положи лодыжку правой ноги на левое колено — получится «четвёрка».','Просунь руки под левое бедро и подтяни его к груди.','Правым локтем мягко отводи правое колено от себя. 45 сек, потом смена.'],
+ how:['Ляг на спину, колени согнуты, стопы на полу.','Положи лодыжку правой ноги на левое колено — получится «четвёрка».','Просунь руки под левое бедро и подтяни его к груди.','Правым локтем мягко отводи правое колено от себя. 45 сек. Вторая нога — следующий подход.'],
  watch:['Тянет в глубине ягодицы и снаружи бедра.','Голова и плечи на полу, не тянись к ногам головой.','Поясница прижата — если отрывается, тяни бедро меньше.'],
  note:'Грушевидная и ягодичные забиваются от падела и сидячей работы. Их жёсткость тянет таз и грузит поясницу сильнее, чем задняя поверхность бедра.'},
 
@@ -498,11 +501,11 @@ h_deadbug:{name:'Dead bug',grp:'Кор',noW:1,repdef:10,rest:'45 сек',
  stop:'Не гонись за амплитудой. Опускай ногу ровно настолько, насколько держится поясница.'},
 h_birddog:{name:'Bird dog',grp:'Кор',noW:1,repdef:8,rest:'45 сек',
  hint:'Стакан воды на пояснице не должен пролиться.',
- how:['На четвереньках: кисти под плечами, колени под тазом.','Спина нейтральная — ни прогиба, ни округления.','Вытяни правую руку вперёд и левую ногу назад до параллели с полом.','Пауза 2 сек, вернись. 8 раз, потом смена.'],
+ how:['На четвереньках: кисти под плечами, колени под тазом.','Спина нейтральная — ни прогиба, ни округления.','Вытяни правую руку вперёд и левую ногу назад до параллели с полом.','Пауза 2 сек, вернись. 8 раз. Другая сторона — следующий подход.'],
  watch:['Таз не разворачивается.','Нога не выше линии корпуса.','Шея продолжает линию спины.']},
 h_splank:{name:'Боковая планка',grp:'Кор',start:0,step:2,unit:'сек',repdef:40,repstep:10,rest:'45 сек',
  hint:'Локоть под плечом, тело в одну линию. Вес — жилет.',
- how:['Ляг на бок, обопрись на локоть строго под плечом.','Подними таз — прямая линия от головы до стоп.','Верхняя рука на бедре. 40 сек, потом смена.'],
+ how:['Ляг на бок, обопрись на локоть строго под плечом.','Подними таз — прямая линия от головы до стоп.','Верхняя рука на бедре. 40 сек. Вторая сторона — следующий подход.'],
  watch:['Плечо опорной руки не проваливается.','Таз в одной плоскости.'],
  note:'Легче — с колен. Тяжелее — жилет 8–10 кг дважды в неделю. Вес пиши в поле слева.'},
 h_bridge:{name:'Ягодичный мостик',grp:'Кор',start:0,step:2,repdef:15,rest:'45 сек',
@@ -519,35 +522,35 @@ h_wheel:{name:'Ролик с колен',grp:'Кор',start:0,step:2,repdef:8,re
  note:'Недели 1–2: 2 подхода × 6–8 на 50% амплитуды. С 3-й недели 3 × 8–12. Потом жилет 5–10 кг.'},
 
 /* --- ДОМ: ПРИОРИТЕТ --- */
-h_pushup:{name:'Отжимания на упорах в жилете',grp:'Грудь',start:0,step:2,repdef:12,bwf:.65,e1:1,noIdx:1,rest:'90 сек',
+h_pushup:{name:'Отжимания на упорах в жилете',grp:'Грудь',start:0,step:2,repdef:12,bwf:.65,e1:1,rest:'90 сек',
  hint:'Опускаться ниже уровня ладоней — в этом смысл упоров.',
  how:['Упоры чуть шире плеч, кисти на уровне середины груди.','Тело в прямую линию: голова, таз, пятки.','Опускайся ниже уровня ладоней, внизу пауза 1 сек.','Вверх мощно, локти до конца не блокируй.'],
  watch:['Локти под 45° к корпусу, не на 90°.','Таз не провисает и не поднимается домиком.','Лопатки сводятся внизу и расходятся вверху.'],
  note:'15 повторов во всех трёх подходах → +2–3 кг в жилет.'},
-h_curl:{name:'Сгибания на бицепс одной рукой',grp:'Бицепс',start:14,step:2,repdef:12,hand:1,e1:1,noIdx:1,rest:'60 сек',
+h_curl:{name:'Сгибания на бицепс одной рукой',grp:'Бицепс',start:14,step:2,repdef:12,hand:1,e1:1,rest:'60 сек',
  hint:'Спиной к стене, локоть прижат. Чередуй руки без паузы.',
- how:['Встань спиной к стене, прижми лопатки и таз.','Гантель в одной руке, локоть прижат к боку.','Сгибай, не двигая локтем. Вверху не доводи предплечье до вертикали.','Опускай 3 сек. Отработал одну руку — сразу вторую.'],
+ how:['Встань спиной к стене, прижми лопатки и таз.','Гантель в одной руке, локоть прижат к боку.','Сгибай, не двигая локтем. Вверху не доводи предплечье до вертикали.','Опускай 3 сек. Одна рука — один подход, вторая рука — следующий.'],
  watch:['Локоть уехал вперёд — подход окончен.','Плечо не поднимается к уху.','Таз не отрывается от стены.']},
-h_hammer:{name:'Молотковые сгибания',grp:'Бицепс',start:14,step:2,repdef:13,hand:1,e1:1,noIdx:1,rest:'60 сек',
+h_hammer:{name:'Молотковые сгибания',grp:'Бицепс',start:14,step:2,repdef:13,hand:1,e1:1,rest:'60 сек',
  hint:'Большой палец вверх, гантель строго вертикально.',
- how:['Позиция та же — спиной к стене, локоть прижат.','Хват нейтральный: большой палец вверх, ладонь к бедру.','Держи гантель вертикально всю амплитуду.','Опускание 3 сек, чередуй руки.'],
+ how:['Позиция та же — спиной к стене, локоть прижат.','Хват нейтральный: большой палец вверх, ладонь к бедру.','Держи гантель вертикально всю амплитуду.','Опускание 3 сек. Каждая рука — отдельный подход.'],
  watch:['Кисть не заваливается и не проворачивается.'],
  note:'Упражнение на толщину руки. Гнаться за весом смысла нет.'},
 
 /* --- ДОМ: СПИНА --- */
-h_row:{name:'Тяга гантели в наклоне одной рукой',grp:'Спина',start:16,step:2,hand:1,repdef:12,e1:1,noIdx:1,rest:'90 сек',
+h_row:{name:'Тяга гантели в наклоне одной рукой',grp:'Спина',start:16,step:2,hand:1,repdef:12,e1:1,rest:'90 сек',
  hint:'Веди локтем к карману, а не тяни кистью вверх. Корпус неподвижен.',
  how:['Упрись свободной рукой и одноимённым коленом в диван или стул. Спина параллельна полу и нейтральна.','Гантель в свободной руке, рука прямая, плечо и лопатка внизу растянуты.','Начинай движение лопаткой: сведи её к позвоночнику, и только потом доводи локтем к карману.','Вверху пауза 1 сек, опускай 3 секунды до полного растяжения внизу.'],
  watch:['Корпус разворачивается вслед за рукой — самая частая ошибка, вес сразу вниз.','Локоть идёт вдоль корпуса, а не в сторону.','Поясница не круглится: таз чуть назад, грудь вперёд.','Чувствуешь только бицепс — значит тянешь рукой, а не спиной.'],
  note:'Добавлено, чтобы выровнять объём спины с грудью. Тяги и жимы должны идти примерно поровну, иначе плечи уезжают вперёд, а осанка за ними.'},
 
 /* --- ДОМ: ТРИЦЕПС --- */
-h_tri_oh:{name:'Разгибание из-за головы с гантелью',grp:'Трицепс',start:12,step:2,repdef:12,e1:1,noIdx:1,rest:'60 сек',
+h_tri_oh:{name:'Разгибание из-за головы с гантелью',grp:'Трицепс',start:12,step:2,repdef:12,e1:1,rest:'60 сек',
  hint:'Локти у головы и неподвижны. Двигается только предплечье.',
  how:['Сядь или встань, рёбра вниз, пресс включён.','Возьми одну гантель двумя руками за верхний блин и подними над головой.','Опускай за голову до отчётливого растяжения трицепса, локти держи узко.','Внизу пауза 1 сек. Разгибай без рывка, вверху локти не блокируй.'],
  watch:['Локти разъезжаются в стороны — вес великоват.','Поясница уходит в прогиб — значит корпус компенсирует.'],
  note:'Растянутая позиция — главный стимул для длинной головки, самой крупной из трёх. Опускай 3 секунды.'},
-h_kick:{name:'Обратные разгибания (кикбэк)',grp:'Трицепс',start:8,step:2,hand:1,repdef:14,e1:1,noIdx:1,rest:'60 сек',
+h_kick:{name:'Обратные разгибания (кикбэк)',grp:'Трицепс',start:8,step:2,hand:1,repdef:14,e1:1,rest:'60 сек',
  hint:'Плечо параллельно полу и неподвижно. Работает только предплечье.',
  how:['Наклонись вперёд почти до параллели корпуса с полом, свободной рукой упрись в стену или бедро.','Плечо рабочей руки прижми к боку и подними до параллели с полом.','Разгибай руку назад до полного выпрямления, в конце короткая пауза и дожим.','Опускай 3 секунды, плечо не роняй.'],
  watch:['Плечо опускается — движение превратилось в мах.','Корпус разворачивается вслед за рукой.'],
@@ -556,7 +559,7 @@ h_kick:{name:'Обратные разгибания (кикбэк)',grp:'Три�
 /* --- ДОМ: ЛОКОТЬ, эпикондилит --- */
 el_ecc:{name:'Эксцентрическое разгибание запястья',grp:'Локоть',start:1,step:.5,hand:1,repdef:15,rest:'60 сек',
  hint:'Главное упражнение протокола. Вверх помогаешь второй рукой, вниз — 4 секунды сам.',
- how:['Сядь, предплечье положи на бедро ладонью вниз, кисть свисает за колено.','Лёгкая гантель в рабочей руке. Второй рукой подними кисть в верхнее положение.','Убери помогающую руку и опускай кисть вниз 4 секунды, сопротивляясь весу.','Снова подними второй рукой. Всё усилие только на опускании.'],
+ how:['Сядь, предплечье положи на бедро ладонью вниз, кисть свисает за колено.','Лёгкая гантель в рабочей руке. Второй рукой подними кисть в верхнее положение.','Убери помогающую руку и опускай кисть вниз 4 секунды, сопротивляясь весу. Вторая рука — следующий подход.','Снова подними второй рукой. Всё усилие только на опускании.'],
  watch:['Предплечье лежит на бедре и не отрывается.','Скорость опускания важнее веса — 4 секунды, не быстрее.'],
  stop:'Острая боль в наружном надмыщелке — прекрати. Тупое тянущее ощущение во время работы допустимо и ожидаемо.',
  note:'Эксцентрика — доказанное ядро лечения латерального эпикондилита. Начни с 1 кг, добавляй по 0,5 кг не чаще раза в две недели. Эффект появляется на 4–6 неделе, не раньше.'},
@@ -606,37 +609,37 @@ Object.keys(REST).forEach(function(k){
 
 /* ============ ТРЕНИРОВКИ ============ */
 var DAYS={
-A:{t:'День A',type:'gym',ex:[
+A:{t:'День A',type:'gym',mins:80,ex:[
  {id:'incline_db',sets:3,reps:'6–10',rd:8},{id:'cable_fly',sets:2,reps:'12–15',rd:13},
  {id:'bb_curl',sets:3,reps:'8–12',rd:10},{id:'pulldown',sets:3,reps:'8–12',rd:10},
  {id:'db_ohp',sets:3,reps:'8–12',rd:10},{id:'leg_press',sets:2,reps:'10–15',rd:12},
  {id:'tri_oh',sets:3,reps:'10–15',rd:12},{id:'lat_raise',sets:3,reps:'12–20',rd:15},
- {id:'farmer',sets:3,reps:'60 сек × сторона',rd:60}]},
-B:{t:'День B',type:'gym',ex:[
+ {id:'farmer',sets:3,reps:'60 сек',rd:60}]},
+B:{t:'День B',type:'gym',mins:85,ex:[
  {id:'bench',sets:3,reps:'5–8',rd:7},{id:'pullup',sets:3,reps:'макс / 8 / 8',rd:8},
  {id:'incline_curl',sets:3,reps:'8–12',rd:11},{id:'cable_fly',sets:3,reps:'12–15',rd:13},
  {id:'leg_curl',sets:3,reps:'10–15',rd:12},{id:'lat_raise',sets:3,reps:'12–20',rd:15},
  {id:'rear_delt',sets:2,reps:'15–20',rd:17},{id:'hanging_leg',sets:3,reps:'8–15',rd:12},
- {id:'pallof',sets:3,reps:'10–12 × сторона',rd:11}]},
+ {id:'pallof',sets:3,reps:'10–12',rd:11}]},
 mob:{t:'Мобильность',type:'home',mins:6,ex:[
- {id:'h_hip',sets:2,reps:'60 сек × сторона',rd:60},{id:'h_tspine',sets:3,reps:'20 сек',rd:20},
- {id:'h_book',sets:2,reps:'8 × сторона',rd:8},{id:'h_door',sets:2,reps:'45 сек × сторона',rd:45},
- {id:'h_glute',sets:2,reps:'45 сек × сторона',rd:45}]},
+ {id:'h_hip',sets:2,reps:'60 сек',rd:60},{id:'h_tspine',sets:3,reps:'20 сек',rd:20},
+ {id:'h_book',sets:2,reps:'8',rd:8},{id:'h_door',sets:2,reps:'45 сек',rd:45},
+ {id:'h_glute',sets:2,reps:'45 сек',rd:45}]},
 core:{t:'Кор и спина',type:'home',mins:7,ex:[
- {id:'h_deadbug',sets:3,reps:'10 × сторона',rd:10},{id:'h_birddog',sets:3,reps:'8 × сторона',rd:8},
- {id:'h_splank',sets:3,reps:'40 сек × сторона',rd:40},{id:'h_bridge',sets:2,reps:'15',rd:15}]},
+ {id:'h_deadbug',sets:3,reps:'10',rd:10},{id:'h_birddog',sets:3,reps:'8',rd:8},
+ {id:'h_splank',sets:3,reps:'40 сек',rd:40},{id:'h_bridge',sets:2,reps:'15',rd:15}]},
 wheel:{t:'Ролик',type:'home',mins:5,ex:[
  {id:'h_wheel',sets:3,reps:'8–12',rd:8}]},
 /* Тяга идёт сразу за отжиманиями: жим и тяга в паре, чтобы объём груди и
    спины рос вместе, а не расходился. */
 prio:{t:'Приоритет: грудь, спина, руки',type:'home',mins:28,ex:[
- {id:'h_pushup',sets:3,reps:'10–15',rd:12},{id:'h_row',sets:3,reps:'10–14 × рука',rd:12},
- {id:'h_curl',sets:3,reps:'10–15 × рука',rd:12},
- {id:'h_hammer',sets:2,reps:'12–15 × рука',rd:13},{id:'h_tri_oh',sets:3,reps:'10–15',rd:12},
- {id:'h_kick',sets:2,reps:'12–15 × рука',rd:14}]},
+ {id:'h_pushup',sets:3,reps:'10–15',rd:12},{id:'h_row',sets:3,reps:'10–14',rd:12},
+ {id:'h_curl',sets:3,reps:'10–15',rd:12},
+ {id:'h_hammer',sets:2,reps:'12–15',rd:13},{id:'h_tri_oh',sets:3,reps:'10–15',rd:12},
+ {id:'h_kick',sets:2,reps:'12–15',rd:14}]},
 elbow:{t:'Локоть: восстановление',type:'home',mins:10,ex:[
- {id:'el_ecc',sets:3,reps:'15 × рука',rd:15},{id:'el_sup',sets:3,reps:'15 × рука',rd:15},
- {id:'el_grip',sets:3,reps:'20 × рука',rd:20},{id:'el_stretch',sets:3,reps:'30 сек × рука',rd:30}]},
+ {id:'el_ecc',sets:3,reps:'15',rd:15},{id:'el_sup',sets:3,reps:'15',rd:15},
+ {id:'el_grip',sets:3,reps:'20',rd:20},{id:'el_stretch',sets:3,reps:'30 сек',rd:30}]},
 padel:{t:'Падел',type:'padel',mins:90,ex:[]}
 };
 var HOME_KEYS=['mob','core','wheel','prio','elbow'];
@@ -1329,6 +1332,9 @@ function stopSetTimer(silent){
 }
 function startSetTimer(exId,kind,idx,sec,btn,row){
   stopSetTimer(true);
+  /* новый подход начался — отдых больше не идёт, иначе его сигнал
+     сработает посреди упражнения */
+  stopRest();paintRest();
   primeAudio();
   var end=Date.now()+sec*1000;
   row.classList.add('timing');
@@ -1357,6 +1363,20 @@ var openEx={};   /* выполненные упражнения, которые 
 /* Замена упражнения: в плане слот item.id, а пишем и читаем по exIdFor —
    поэтому история подменённого упражнения остаётся своей и не смешивается. */
 function exIdFor(item){return (S.active&&S.active.swap&&S.active.swap[item.id])||item.id;}
+/* Ожидаемая длительность: среднее по последним трём таким же тренировкам.
+   Пока их меньше трёх — по тому, что есть; совсем без истории — плановая
+   прикидка из DAYS. */
+function estMins(k){
+  var rows=S.log.filter(function(x){return x.day===k;}).slice(-3);
+  if(!rows.length)return{m:DAYS[k].mins||0,n:0};
+  var s=0;rows.forEach(function(x){s+=minsOf(x);});
+  return{m:Math.round(s/rows.length),n:rows.length};
+}
+function minsLabel(k){
+  var e=estMins(k);
+  if(!e.m)return '';
+  return '~'+e.m+' мин'+(e.n?'':' (план)');
+}
 function frac(done,need){
   var c=need===0?'':(done>=need?' ok':(done>0?' miss':' zero'));
   return '<span class="dn fr'+c+'">'+done+'/'+need+'</span>';
@@ -1372,7 +1392,7 @@ function renderWork(){
     HOME_KEYS.forEach(function(k){
       var last=S.log.filter(function(x){return x.day===k;}).slice(-1)[0];
       h+='<button data-start="'+k+'">'+frac(planDone(k,wk),P[k])+'<span class="dd"><b>'+DAYS[k].t+'</b>'+
-         '<span>~'+DAYS[k].mins+' мин · '+DAYS[k].ex.length+' упражнений</span>'+
+         '<span>'+minsLabel(k)+' · '+DAYS[k].ex.length+' упражнений</span>'+
          '<em>'+(last?'Последний раз: '+dwd(last.s):'Ещё не выполнялся')+'</em></span></button>';
     });
     h+='</div><p class="hdr">Зал</p><div class="pick">';
@@ -1381,7 +1401,7 @@ function renderWork(){
       var last=S.log.filter(function(x){return x.day===k;}).slice(-1)[0];
       var tot=DAYS[k].ex.reduce(function(a,x){return a+setsOf(k,x);},0);
       h+='<button data-start="'+k+'">'+frac(gd,P.gym)+'<span class="dd"><b>'+DAYS[k].t+'</b>'+
-         '<span>'+DAYS[k].ex.length+' упражнений · '+tot+' рабочих подходов</span>'+
+         '<span>'+minsLabel(k)+' · '+DAYS[k].ex.length+' упр. · '+tot+' подх.</span>'+
          '<em>'+(last?'Последний раз: '+dwd(last.s):'Ещё не выполнялся')+'</em></span></button>';
     });
     h+='</div><p class="hdr">Корт</p><div class="pick home">';
@@ -1401,10 +1421,14 @@ function renderWork(){
     var doneN=sArr.filter(function(s){return s&&s.d;}).length;
     var tag=' data-ex="'+exId+'" data-item="'+item.id+'"';
 
-    /* всё сделано и пользователь не раскрывал обратно — сворачиваем в строку.
-       Подсказка о прибавке веса срабатывает ровно в этот момент, поэтому
-       её выносим прямо в свёрнутую строку, иначе она осталась бы незамеченной. */
-    if(doneN>=nSets&&!openEx[exId]){
+    /* Сворачиваем не в момент последнего подхода, а когда у него проставлен
+       запас повторов: иначе карточку пришлось бы разворачивать обратно ради
+       одного тапа. У подходов на время запаса нет — там сворачиваем сразу.
+       Подсказка о прибавке веса выносится в свёрнутую строку, иначе она
+       появлялась бы ровно в момент сворачивания и оставалась незамеченной. */
+    var lastSet=sArr[nSets-1];
+    var rirSet=(m.unit==='сек')||!!(lastSet&&lastSet.q!==undefined&&lastSet.q!==null);
+    if(doneN>=nSets&&rirSet&&!openEx[exId]){
       var sum=sArr.filter(function(s){return s&&s.d;}).map(function(s){
         return m.noW?String(s.r):fmtW(s.w)+'×'+s.r;}).join('  ');
       var fh=progHint(item,m,sArr,nSets);
