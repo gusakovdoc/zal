@@ -1202,19 +1202,24 @@ function keepAlive(on){
     }
   }catch(e){}
 }
-var alarmRang=false;
+var alarmRang=false,alarmAt=0;
 function scheduleAlarm(sec){
   cancelAlarm();
   if(!primeAudio())return;
   keepAlive(true);
   alarmRang=false;
   try{
-    alarmN=tonesAt(actx.currentTime+sec,'rest');
+    alarmAt=actx.currentTime+sec;
+    alarmN=tonesAt(alarmAt,'rest');
     /* по окончании первой ноты знаем, что очередь реально прозвучала */
     if(alarmN[0])alarmN[0].onended=function(){alarmRang=true;};
   }catch(e){}
 }
+/* Уже зазвучавший сигнал не обрываем. Иначе следующий подход, начатый сразу
+   после «Пора», через stopRest срезал бы его на первой ноте — а именно так
+   и ведёт себя авто-ход и любой быстрый тап по галочке. */
 function cancelAlarm(){
+  if(actx&&alarmAt&&actx.currentTime>=alarmAt-0.05){alarmN=[];return;}
   alarmN.forEach(function(n){try{n.stop(0);}catch(e){}});
   alarmN=[];
 }
@@ -1227,8 +1232,10 @@ function notifyRest(){
     if(!('Notification' in window)||Notification.permission!=='granted')return;
     if(navigator.serviceWorker&&navigator.serviceWorker.ready){
       navigator.serviceWorker.ready.then(function(r){
+        /* silent: своим звуком уведомление перебивало бы наш сигнал —
+           система на время приглушает медиа, чтобы дать место рингтону */
         r.showNotification('Отдых окончен',{body:'Следующий подход',tag:'rest',renotify:true,
-          vibrate:[200,90,200,90,240],icon:'icon-192.png',badge:'icon-192.png'});
+          silent:true,vibrate:[200,90,200,90,240],icon:'icon-192.png',badge:'icon-192.png'});
       }).catch(function(){});
     }
   }catch(e){}
@@ -1407,7 +1414,11 @@ function startRest(sec,then){
     if(left<=0){
       clearInterval(restT);restT=null;
       b.className='restbtn fire';b.textContent='Пора';
-      buzz();notifyRest();keepAlive(false);
+      buzz();notifyRest();
+      /* Неслышимый тон держит аудиопоток. Снять его прямо сейчас значит
+         закрыть поток в ту же секунду, когда сигнал только начал звучать —
+         поэтому отпускаем уже после того, как фраза доиграла. */
+      setTimeout(function(){if(!restT)keepAlive(false);},2600);
       /* Запланированная очередь молчит, если система успела усыпить звук.
          Через полсекунды проверяем и, если тишина, играем сигнал напрямую —
          так он звучит ровно один раз в любом случае. */
@@ -1421,7 +1432,12 @@ function startRest(sec,then){
   }
   up();restT=setInterval(up,250);
 }
-function stopRest(){if(restT){clearInterval(restT);restT=null;}cancelAlarm();keepAlive(false);}
+function stopRest(){
+  if(restT){clearInterval(restT);restT=null;}
+  cancelAlarm();
+  /* поток не закрываем, пока звучит уже начавшийся сигнал */
+  if(!(actx&&alarmAt&&actx.currentTime<alarmAt+2.2))keepAlive(false);
+}
 function paintRest(){
   var b=document.getElementById('restbtn');
   if(!S.active){b.hidden=true;stopRest();return;}
