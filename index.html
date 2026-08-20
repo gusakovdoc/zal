@@ -250,10 +250,15 @@ textarea.small{height:74px}
 .exfold .fsum{font-family:"IBM Plex Mono",monospace;font-size:12.5px;color:var(--mut);display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .foldi{color:var(--dim);font-size:13px;flex:0 0 auto}
 
-/* авто-ход у упражнений на время */
-.autobar{display:flex;align-items:center;gap:9px;margin:0 14px 9px 45px;padding:7px 10px;background:rgba(85,188,138,.08);border-left:2px solid var(--ok);border-radius:var(--r-x);font-size:12.5px;color:var(--mut);line-height:1.35}
-.autobar button{flex:0 0 auto;width:26px;height:26px;border-radius:999px;background:var(--surf);border:1px solid var(--line);color:var(--dim);font-size:13px;padding:0;line-height:1}
-.autobar button.on{background:var(--ok);border-color:var(--ok);color:var(--ink);font-weight:700}
+/* авто-ход: одна галка на всю тренировку */
+.autotop{display:inline-flex;align-items:center;gap:8px;background:var(--surf);border:1px solid var(--line);border-radius:999px;padding:6px 14px 6px 6px;margin:0 0 12px;font-family:"Barlow Condensed",sans-serif;font-weight:600;font-size:14px;letter-spacing:.07em;text-transform:uppercase;color:var(--mut);box-shadow:var(--edge)}
+.autotop .ab{width:24px;height:24px;border-radius:999px;background:var(--card2);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--dim);flex:0 0 auto}
+.autotop.on{color:var(--tx);border-color:var(--ok-br)}
+.autotop.on .ab{background:var(--ok);border-color:var(--ok);color:var(--ink);font-weight:700}
+
+/* заголовок раскрытого упражнения — кнопка сворачивания */
+button.exh{width:100%;background:none;border:0;text-align:left;font:inherit;color:inherit}
+button.exh .foldi{align-self:flex-start;padding-top:3px}
 
 /* сторона вместо номера подхода */
 .si.sd{color:var(--acc);font-family:"Barlow Condensed",sans-serif;font-weight:700;font-size:14px;letter-spacing:.04em}
@@ -721,9 +726,11 @@ var FACTS=[
 'Мышца растёт ещё 24–48 часов после тренировки. Добивать её на следующий день тем же движением — значит мешать, а не помогать.'];
 
 /* ============ СОСТОЯНИЕ ============ */
-var PLAN0={gym:2,mob:5,core:3,wheel:2,prio:2,elbow:5,padel:2};
+/* Падела в плане нет намеренно: корт не про недельную норму, его просто
+   считаем по факту. */
+var PLAN0={gym:2,mob:5,core:3,wheel:2,prio:2,elbow:5};
 /* Урезанная неделя: минимум, который удерживает результат, когда всё пошло не так */
-var PLANMIN={gym:1,mob:2,core:1,wheel:0,prio:0,elbow:5,padel:0};
+var PLANMIN={gym:1,mob:2,core:1,wheel:0,prio:0,elbow:5};
 var S={active:null,log:[],body:[],custom:{},setsOv:{},plan:copy(PLAN0),
        planHist:{},bad:{},sync:{tok:'',repo:'',path:'data.json',at:0,err:''},backupAt:0,
        gain:'hard',advice:null,advSeen:'',dismissed:{},weekOk:{},auto:true};
@@ -1480,7 +1487,9 @@ function startSetTimer(exId,kind,idx,sec,btn,row){
 }
 
 /* ============ ЭКРАН: ТРЕНИРОВКА ============ */
-var openEx={};   /* выполненные упражнения, которые пользователь раскрыл обратно */
+/* Как свёрнуто упражнение: 'fold' и 'open' — решение пользователя, пусто —
+   автоматика (закрыто целиком и запас проставлен). */
+var foldSt={};
 /* Замена упражнения: в плане слот item.id, а пишем и читаем по exIdFor —
    поэтому история подменённого упражнения остаётся своей и не смешивается. */
 function exIdFor(item){return (S.active&&S.active.swap&&S.active.swap[item.id])||item.id;}
@@ -1529,7 +1538,9 @@ function renderWork(){
     });
     h+='</div><p class="hdr">Корт</p><div class="pick home">';
     var lp=S.log.filter(function(x){return x.day==='padel';}).slice(-1)[0];
-    h+='<button data-start="padel">'+frac(planDone('padel',wk),P.padel)+'<span class="dd"><b>Падел</b>'+
+    /* у падела нет недельной нормы — показываем просто сколько было */
+    var pd=planDone('padel',wk);
+    h+='<button data-start="padel"><span class="dn fr'+(pd?' ok':'')+'">'+pd+'</span><span class="dd"><b>Падел</b>'+
        '<span>Записать игру: время и калории с пульсометра</span>'+
        '<em>'+(lp?'Последний раз: '+dwd(lp.s):'Ещё не записан')+'</em></span></button></div>';
     v.innerHTML=h;setClock(null);return;
@@ -1538,6 +1549,12 @@ function renderWork(){
   var day=DAYS[S.active.day];
   sub.textContent=day.t+' · идёт';
   var out='';
+  /* Одна галка на всю тренировку: авто-ход всё равно общий, а в каждой
+     карточке он занимал место без пользы. Показываем только там, где есть
+     подходы на время — иначе переключать нечего. */
+  if(day.ex.some(function(x){return EX[exIdFor(x)].unit==='сек';}))
+    out+='<button class="autotop'+(S.auto?' on':'')+'" data-a="auto">'+
+         '<span class="ab">'+(S.auto?'✓':'○')+'</span>Авто-ход</button>';
   day.ex.forEach(function(item,i){
     var exId=exIdFor(item),m=EX[exId],nSets=setsOf(S.active.day,item);
     var sArr=S.active.e[exId]||[],wArr=S.active.w[exId]||[];
@@ -1551,7 +1568,8 @@ function renderWork(){
        появлялась бы ровно в момент сворачивания и оставалась незамеченной. */
     var lastSet=sArr[nSets-1];
     var rirSet=(m.unit==='сек')||!!(lastSet&&lastSet.q!==undefined&&lastSet.q!==null);
-    if(doneN>=nSets&&rirSet&&!openEx[exId]){
+    var autoFold=doneN>=nSets&&rirSet,fs=foldSt[exId];
+    if(fs==='fold'||(fs!=='open'&&autoFold)){
       var sum=sArr.filter(function(s){return s&&s.d;}).map(function(s){
         return m.noW?String(s.r):fmtW(s.w)+'×'+s.r;}).join('  ');
       var fh=progHint(item,m,sArr,nSets);
@@ -1573,14 +1591,11 @@ function renderWork(){
     var isPR=cur1>0&&cur1>=rec-0.01&&rec>0;
 
     out+='<article class="ex'+(doneN>=nSets?' done':'')+'"'+tag+'>'+
-      '<div class="exh"><span class="exn">'+(i+1)+'</span><span class="ext">'+
+      '<button class="exh" data-a="fold"><span class="exn">'+(i+1)+'</span><span class="ext">'+
       '<h3>'+m.name+(isPR?'<span class="pr">Рекорд</span>':'')+(exId!==item.id?'<span class="grp">замена</span>':'')+'</h3>'+
       '<span class="tgt">'+nSets+' × '+item.reps+'<span class="grp">'+m.grp+'</span></span>'+
-      '</span></div><p class="hint">'+m.hint+'</p>';
+      '</span><span class="foldi">▴</span></button><p class="hint">'+m.hint+'</p>';
     if(m.e1&&cur1>0) out+='<div class="e1">Средний 1ПМ за подходы: '+Math.round(cur1)+' кг'+(rec>0?'  ·  рекорд '+Math.round(rec)+' кг':'')+'</div>';
-    /* авто-ход есть только там, где все подходы на время */
-    if(m.unit==='сек') out+='<div class="autobar"><button data-a="auto" class="'+(S.auto?'on':'')+'">'+
-      (S.auto?'✓':'○')+'</button><span>Авто-ход: подходы и паузы идут сами, касаться экрана не нужно</span></div>';
     var ad=S.advice&&S.advice.ex&&S.advice.ex[exId];
     if(ad){
       var bits=[];
@@ -1616,7 +1631,7 @@ function renderWork(){
     }
     out+='<div class="setbtns"><button data-a="set+">+ подход</button><button data-a="set-">− подход</button>'+
          '<button data-a="swap">Заменить</button><button data-a="note">Примечание</button>'+
-         (doneN>=nSets?'<button data-a="fold">Свернуть</button>':'')+'</div>';
+'</div>';
     out+='</div><button class="tech-btn" aria-expanded="false" data-a="tech">Техника · отдых '+(m.rest||'—')+'</button>'+
          '<div class="tech">'+techHtml(m,exId)+'</div></article>';
   });
@@ -1716,7 +1731,7 @@ document.addEventListener('click',function(ev){
   if(a==='tech'){var op=b.getAttribute('aria-expanded')==='true';b.setAttribute('aria-expanded',op?'false':'true');b.nextElementSibling.classList.toggle('open',!op);return;}
   if(a==='finish'){var n=countActive();if(!n){toast('Нет ни одного отмеченного подхода');return;}openFinish();return;}
   if(a==='drop'){
-    if(armed&&armed.el===b){disarm();stopRest();stopSetTimer(true);S.active=null;openEx={};wakeOff();save();renderWork();setClock(null);paintRest();toast('Тренировка отменена');}
+    if(armed&&armed.el===b){disarm();stopRest();stopSetTimer(true);S.active=null;foldSt={};wakeOff();save();renderWork();setClock(null);paintRest();toast('Тренировка отменена');}
     else arm(b,'Точно отменить? Всё сотрётся');return;}
   if(a==='fsave'){doFinish();return;}
   if(a==='psave'){savePadel();return;}
@@ -1733,9 +1748,12 @@ document.addEventListener('click',function(ev){
   if(a==='note'){openNote(b.closest('.ex').dataset.ex);return;}
   if(a==='nsave'){saveNote();return;}
   if(a==='undis'){S.dismissed={};save();renderWork();window.scrollTo(0,0);toast('Скрытые карточки возвращены');return;}
-  if(a==='auto'){S.auto=!S.auto;save();renderWork();toast(S.auto?'Авто-ход включён':'Авто-ход выключен');return;}
+  if(a==='auto'){S.auto=!S.auto;save();renderWork();
+    toast(S.auto?'Авто-ход включён: подходы на время и паузы между ними идут сами'
+                :'Авто-ход выключен: каждый подход запускаешь сам');return;}
   if(a==='advtog'){advOpen=!advOpen;if(!advOpen)advMarkSeen();renderWork();return;}
-  if(a==='fold'){var fx=b.closest('.ex').dataset.ex;openEx[fx]=!openEx[fx];renderWork();return;}
+  if(a==='fold'){var fx=b.closest('.ex').dataset.ex;
+    foldSt[fx]=b.classList.contains('exfold')?'open':'fold';renderWork();return;}
   if(a==='swap'){openSwap(b.closest('.ex').dataset.item);return;}
   if(a==='doswap'){doSwap();return;}
   if(a==='set+'||a==='set-'){
@@ -1800,7 +1818,9 @@ document.addEventListener('click',function(ev){
        галочке, отметка снимется. */
     if(m.unit==='сек'&&nd){
       if(setT&&setT.exId===exId2&&setT.kind===kind&&setT.idx===idx){
-        var done=Math.max(1,Math.round((Date.now()-setT.st)/1000));
+        /* засчитываем запланированное время, а не отсчитанное: тапают
+           именно чтобы закрыть подход, а не чтобы урезать его до секунд */
+        var done=setT.sec;
         stopSetTimer(true);
         finishTimedSet(exId2,kind,idx,done);
         toast('Засчитано: '+done+' сек');
@@ -1888,7 +1908,7 @@ function startDay(k){
   if(k==='padel'){openPadel();return;}
   /* начал тренироваться — значит разбор прочитан */
   advMarkSeen();advOpen=false;
-  stopRest();stopSetTimer(true);openEx={};
+  stopRest();stopSetTimer(true);foldSt={};
   S.active={day:k,type:DAYS[k].type,s:Date.now(),pAcc:0,e:{},w:{},swap:{}};
   accSaveAt=Date.now();save();renderWork();setClock(true);paintRest();wakeOn();window.scrollTo(0,0);
 }
@@ -1933,7 +1953,7 @@ function doFinish(){
               swap:(a.swap&&Object.keys(a.swap).length)?a.swap:undefined});
   /* план недели фиксируется здесь: дальше его правка эту неделю не тронет */
   freezePlan(weekKey(a.s));
-  stopRest();stopSetTimer(true);S.active=null;openEx={};wakeOff();
+  stopRest();stopSetTimer(true);S.active=null;foldSt={};wakeOff();
   save();closeModal();renderWork();setClock(null);paintRest();
   var l=S.log[S.log.length-1];
   toast('Записано: '+countSets(l)+' подходов, '+mins+' мин · '+kcalOf(l)+' ккал');
@@ -2391,8 +2411,7 @@ function renderStat(){
   h+='<h4>План на неделю</h4><p class="sub">Сколько нужно, чтобы неделя считалась выполненной, и сколько уже сделано. Правка плана меняет только текущую и будущие недели — прошлые уже зафиксированы.</p><div class="scroll"><table>'+
      '<tr><th>Что</th><th style="text-align:center">Сделано</th><th>План</th></tr>'+
      planRow('gym','Зал (день A + день B)')+planRow('mob','Мобильность')+planRow('core','Кор и спина')+
-     planRow('wheel','Ролик')+planRow('prio','Приоритет')+planRow('elbow','Локоть')+
-     planRow('padel','Падел')+'</table></div>';
+     planRow('wheel','Ролик')+planRow('prio','Приоритет')+planRow('elbow','Локоть')+'</table></div>';
 
   /* всего */
   if(S.log.length){
