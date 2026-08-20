@@ -1158,7 +1158,7 @@ function audioOut(){
    [частота, смещение от начала, длительность] */
 var TONE={
   set: [[1046,0,.26],[1046,.28,.26],[1568,.56,.30]],
-  rest:[[659,0,.30],[988,.32,.30],[659,.64,.30],[988,.96,.30],[1319,1.28,.55]],
+  rest:[[659,0,.32],[988,.34,.52]],
   tick:[[880,0,.15]]
 };
 function tonesAt(t0,kind){
@@ -1431,7 +1431,7 @@ function startRest(sec,then){
       /* Неслышимый тон держит аудиопоток. Снять его прямо сейчас значит
          закрыть поток в ту же секунду, когда сигнал только начал звучать —
          поэтому отпускаем уже после того, как фраза доиграла. */
-      setTimeout(function(){if(!restT)keepAlive(false);},2600);
+      setTimeout(function(){if(!restT)keepAlive(false);},1500);
       /* Запланированная очередь молчит, если система успела усыпить звук.
          Через полсекунды проверяем и, если тишина, играем сигнал напрямую —
          так он звучит ровно один раз в любом случае. */
@@ -1449,7 +1449,7 @@ function stopRest(){
   if(restT){clearInterval(restT);restT=null;}
   cancelAlarm();
   /* поток не закрываем, пока звучит уже начавшийся сигнал */
-  if(!(actx&&alarmAt&&actx.currentTime<alarmAt+2.2))keepAlive(false);
+  if(!(actx&&alarmAt&&actx.currentTime<alarmAt+1.1))keepAlive(false);
 }
 function paintRest(){
   var b=document.getElementById('restbtn');
@@ -2358,6 +2358,17 @@ function renderStat(){
     '<div class="kpi"><b>'+(Math.round(ws.reduce(function(a,x){return a+tonnage(x);},0)/100)/10)+'т</b><span>тоннаж</span></div>'+
     '<div class="kpi"><b>'+weekKcal(tw)+'</b><span>ккал</span></div></div>';
 
+  /* всего — сразу под недельными цифрами: обе сводки читаются вместе */
+  if(S.log.length){
+    var tt=S.log.reduce(function(a,x){return a+tonnage(x);},0);
+    var gy=S.log.filter(function(x){return typeOf(x)==='gym';});
+    var ad=gy.length?gy.reduce(function(a,x){return a+(x.f-x.s);},0)/gy.length:0;
+    h+='<h4>Всего</h4><div class="kpis">'+
+      '<div class="kpi"><b>'+S.log.length+'</b><span>тренировок</span></div>'+
+      '<div class="kpi"><b>'+(Math.round(tt/100)/10)+'т</b><span>поднято</span></div>'+
+      '<div class="kpi"><b>'+Math.round(ad/60000)+'</b><span>мин в зале<br>в среднем</span></div></div>';
+  }
+
   /* календарь */
   var now=new Date();
   if(calM===null)calM=now.getFullYear()*12+now.getMonth();
@@ -2480,20 +2491,14 @@ function renderStat(){
   h+=sec('trend','Тренд за 8 недель','',tb);
 
   /* план */
-  h+='<h4>План на неделю</h4><p class="sub">Сколько нужно, чтобы неделя считалась выполненной, и сколько уже сделано. Правка плана меняет только текущую и будущие недели — прошлые уже зафиксированы.</p><div class="scroll"><table>'+
+  var pb='<p class="sub">Сколько нужно, чтобы неделя считалась выполненной, и сколько уже сделано. Правка плана меняет только текущую и будущие недели — прошлые уже зафиксированы.</p><div class="scroll"><table>'+
      '<tr><th>Что</th><th style="text-align:center">Сделано</th><th>План</th></tr>'+
      planRow('gym','Зал (день A + день B)')+planRow('mob','Мобильность')+planRow('core','Кор и спина')+
      planRow('wheel','Ролик')+planRow('prio','Приоритет')+planRow('elbow','Локоть')+'</table></div>';
+  h+=sec('plan','План на неделю','зал '+TP.gym+' · дома '+homeNeed(TP),pb);
 
-  /* всего */
+  /* история */
   if(S.log.length){
-    var tt=S.log.reduce(function(a,x){return a+tonnage(x);},0);
-    var gy=S.log.filter(function(x){return (x.type||DAYS[x.day].type)==='gym';});
-    var ad=gy.length?gy.reduce(function(a,x){return a+(x.f-x.s);},0)/gy.length:0;
-    h+='<h4>Всего</h4><div class="kpis">'+
-      '<div class="kpi"><b>'+S.log.length+'</b><span>тренировок</span></div>'+
-      '<div class="kpi"><b>'+(Math.round(tt/100)/10)+'т</b><span>поднято</span></div>'+
-      '<div class="kpi"><b>'+Math.round(ad/60000)+'</b><span>мин в зале<br>в среднем</span></div></div>';
     var hb='<p class="sub">Нажми на тренировку, чтобы поправить время, калории и заметку.</p>';
     S.log.map(function(x,i){return {x:x,i:i};}).reverse().slice(0,30).forEach(function(o){
       var x=o.x,isG=typeOf(x)==='gym';
