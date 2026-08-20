@@ -1140,28 +1140,38 @@ function audioOut(){
 /* Сигналы ставятся в очередь звукового движка на точное время. Очередь
    исполняется в аудиопотоке и не зависит от таймеров вкладки — поэтому
    сигнал срабатывает и тогда, когда экран телефона уже погас. */
-function tonesAt(t0,n){
-  var dst=audioOut(),made=[];
-  n=n||3;
-  for(var i=0;i<n;i++){
-    var t=t0+i*0.28,f=(i===n-1)?1568:1046;
+/* Три разных сигнала, чтобы не путать их на слух через зал:
+   set  — подход закрыт: короткая тройка вверх;
+   rest — отдых кончился: длинная качающаяся фраза ниже тоном, её слышно
+          и краем уха, и ни с чем не спутаешь;
+   tick — смена стороны внутри подхода: одна короткая нота.
+   [частота, смещение от начала, длительность] */
+var TONE={
+  set: [[1046,0,.26],[1046,.28,.26],[1568,.56,.30]],
+  rest:[[659,0,.30],[988,.32,.30],[659,.64,.30],[988,.96,.30],[1319,1.28,.55]],
+  tick:[[880,0,.15]]
+};
+function tonesAt(t0,kind){
+  var dst=audioOut(),made=[],spec=TONE[kind]||TONE.set;
+  spec.forEach(function(p){
+    var t=t0+p[1],f=p[0],dur=p[2];
     var g=actx.createGain();g.connect(dst);
     g.gain.setValueAtTime(0.0001,t);
     g.gain.exponentialRampToValueAtTime(0.9,t+0.01);
-    g.gain.exponentialRampToValueAtTime(0.0001,t+0.26);
+    g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
     /* треугольник + октава сверху: заметно слышнее синуса на динамике телефона */
     var o=actx.createOscillator();o.type='triangle';o.frequency.setValueAtTime(f,t);o.connect(g);
     var o2=actx.createOscillator(),g2=actx.createGain();
     o2.type='sine';o2.frequency.setValueAtTime(f*2,t);g2.gain.setValueAtTime(0.35,t);
     o2.connect(g2);g2.connect(g);
-    o.start(t);o.stop(t+0.28);o2.start(t);o2.stop(t+0.28);
+    o.start(t);o.stop(t+dur+0.02);o2.start(t);o2.stop(t+dur+0.02);
     made.push(o,o2);
-  }
+  });
   return made;
 }
 function buzz(){try{if(navigator.vibrate)navigator.vibrate([200,90,200,90,240]);}catch(e){}}
-function beep(times){
-  try{if(primeAudio())tonesAt(actx.currentTime,times||3);}catch(e){}
+function beep(kind){
+  try{if(primeAudio())tonesAt(actx.currentTime,kind||'set');}catch(e){}
   buzz();
 }
 function primeAudio(){
@@ -1192,11 +1202,17 @@ function keepAlive(on){
     }
   }catch(e){}
 }
+var alarmRang=false;
 function scheduleAlarm(sec){
   cancelAlarm();
   if(!primeAudio())return;
   keepAlive(true);
-  try{alarmN=tonesAt(actx.currentTime+sec,3);}catch(e){}
+  alarmRang=false;
+  try{
+    alarmN=tonesAt(actx.currentTime+sec,'rest');
+    /* по окончании первой ноты знаем, что очередь реально прозвучала */
+    if(alarmN[0])alarmN[0].onended=function(){alarmRang=true;};
+  }catch(e){}
 }
 function cancelAlarm(){
   alarmN.forEach(function(n){try{n.stop(0);}catch(e){}});
@@ -1354,7 +1370,11 @@ function restFor(exId,kind,idx){
   var m=EX[exId];if(!m)return 0;
   var base=m.restS||0;
   if(kind==='w'){
-    base=base?Math.max(30,Math.round(base/2/15)*15):45;
+    /* Разминка греет, а не утомляет, поэтому пауза после неё должна идти
+       за весом: после пустого грифа хватает двадцати секунд, после
+       подводки на 90% нужно почти столько же, сколько между рабочими. */
+    var wp=(m.wu&&m.wu[idx])?m.wu[idx].p:0.5;
+    base=Math.max(20,Math.round((base||90)*wp/5)*5);
   }else{
     var item=planItemFor(exId);
     if(item&&idx>=setsOf(S.active.day,item)-1){
@@ -1388,6 +1408,10 @@ function startRest(sec,then){
       clearInterval(restT);restT=null;
       b.className='restbtn fire';b.textContent='Пора';
       buzz();notifyRest();keepAlive(false);
+      /* Запланированная очередь молчит, если система успела усыпить звук.
+         Через полсекунды проверяем и, если тишина, играем сигнал напрямую —
+         так он звучит ровно один раз в любом случае. */
+      setTimeout(function(){if(!alarmRang)beep('rest');},600);
       setTimeout(function(){if(!restT)paintRest();},4000);
       if(then)then();
       return;
@@ -1428,7 +1452,7 @@ function finishTimedSet(exId,kind,idx,sec){
   var cur=arr[idx]||{};
   arr[idx]={w:cur.w||0,r:sec,d:true,warn:false,q:cur.q};
   S.active.lastEx=exId;
-  save();beep(3);renderWork();
+  save();beep('set');renderWork();
   var rest=restFor(exId,kind,idx);
   var item=planItemFor(exId);
   var more=item&&kind==='s'&&idx<setsOf(S.active.day,item)-1;
@@ -1472,7 +1496,7 @@ function startSetTimer(exId,kind,idx,sec,btn,row){
       pi++;
       if(pi<ph.length){
         /* между сторонами короткий сигнал, чтобы не смотреть на экран */
-        beep(1);
+        beep('tick');
         end=Date.now()+ph[pi].s*1000;
         return;
       }
@@ -1573,7 +1597,7 @@ function renderWork(){
       var sum=sArr.filter(function(s){return s&&s.d;}).map(function(s){
         return m.noW?String(s.r):fmtW(s.w)+'×'+s.r;}).join('  ');
       var fh=progHint(item,m,sArr,nSets);
-      out+='<article class="ex done"'+tag+'>'+
+      out+='<article class="ex'+(doneN>=nSets?' done':'')+'"'+tag+'>'+
         '<button class="exfold" data-a="fold"><span class="exn">'+(i+1)+'</span>'+
         '<span class="ext"><h3>'+m.name+'</h3><span class="fsum">'+sum+'</span>'+
         (fh?'<span class="fsum" style="color:var(--ok)">↑ '+fh.replace('Все подходы на верхней границе: в следующий раз ','след. раз ')+'</span>':'')+
