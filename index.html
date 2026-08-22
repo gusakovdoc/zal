@@ -256,6 +256,13 @@ textarea.small{height:74px}
 .autotop.on{color:var(--tx);border-color:var(--ok-br)}
 .autotop.on .ab{background:var(--ok);border-color:var(--ok);color:var(--ink);font-weight:700}
 
+/* перетаскивание упражнений */
+.ex{transition:transform .12s,box-shadow .12s}
+.ex.dragging{transform:scale(1.02);box-shadow:0 14px 34px rgba(0,0,0,.75);border-color:var(--acc);position:relative;z-index:5;transition:none}
+body.dragmode{overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none}
+.grip{color:var(--dim);font-size:14px;letter-spacing:-2px;flex:0 0 auto;padding-right:2px}
+.exh,.exfold{touch-action:pan-y}
+
 /* заголовок раскрытого упражнения — кнопка сворачивания */
 button.exh{width:100%;background:none;border:0;text-align:left;font:inherit;color:inherit}
 button.exh .foldi{align-self:flex-start;padding-top:3px}
@@ -743,13 +750,13 @@ var PLAN0={gym:2,mob:5,core:3,wheel:2,prio:2,elbow:5};
 var PLANMIN={gym:1,mob:2,core:1,wheel:0,prio:0,elbow:5};
 var S={active:null,log:[],body:[],custom:{},setsOv:{},plan:copy(PLAN0),
        planHist:{},bad:{},sync:{tok:'',repo:'',path:'data.json',at:0,err:''},backupAt:0,
-       gain:'hard',advice:null,advSeen:'',dismissed:{},weekOk:{},auto:true,vol:1,vibe:true};
+       gain:'hard',advice:null,advSeen:'',dismissed:{},weekOk:{},auto:true,vol:1,vibe:true,order:{}};
 var tick=null,calM=null,statWk=null;
 function copy(o){var r={};Object.keys(o).forEach(function(k){r[k]=o[k];});return r;}
 
 function save(){store.set('gym:v2',{active:S.active,log:S.log,body:S.body,custom:S.custom,setsOv:S.setsOv,
   plan:S.plan,planHist:S.planHist,bad:S.bad,sync:S.sync,backupAt:S.backupAt,
-  gain:S.gain,advice:S.advice,advSeen:S.advSeen,dismissed:S.dismissed,weekOk:S.weekOk,auto:S.auto,vol:S.vol,vibe:S.vibe});}
+  gain:S.gain,advice:S.advice,advSeen:S.advSeen,dismissed:S.dismissed,weekOk:S.weekOk,auto:S.auto,vol:S.vol,vibe:S.vibe,order:S.order});}
 function toast(m,pr){
   var t=document.getElementById('toast');
   t.textContent=m;t.className='toast on'+(pr?' pr':'');
@@ -1150,16 +1157,16 @@ function audioOut(){
 /* Сигналы ставятся в очередь звукового движка на точное время. Очередь
    исполняется в аудиопотоке и не зависит от таймеров вкладки — поэтому
    сигнал срабатывает и тогда, когда экран телефона уже погас. */
-/* Три разных сигнала, чтобы не путать их на слух через зал:
-   set  — подход закрыт: короткая тройка вверх;
-   rest — отдых кончился: длинная качающаяся фраза ниже тоном, её слышно
-          и краем уха, и ни с чем не спутаешь;
-   tick — смена стороны внутри подхода: одна короткая нота.
+/* Ровно три сигнала на всё приложение, каждый со своим единственным
+   смыслом — так их не приходится различать по контексту:
+   rest — пошёл отсчёт паузы (отдых, подготовка, смена стороны);
+   go   — начался подход, в том числе когда отдых закончился;
+   done — упражнение закрыто целиком.
    [частота, смещение от начала, длительность] */
 var TONE={
-  set: [[1046,0,.26],[1046,.28,.26],[1568,.56,.30]],
-  rest:[[659,0,.32],[988,.34,.52]],
-  tick:[[880,0,.15]]
+  rest:[[659,0,.28],[988,.30,.42]],                    /* отсчёт пошёл: вверх */
+  go:  [[988,0,.28],[659,.30,.42]],                    /* подход пошёл: вниз */
+  done:[[1046,0,.24],[1319,.26,.24],[1568,.52,.42]]    /* упражнение закрыто */
 };
 function tonesAt(t0,kind){
   var dst=audioOut(),made=[],spec=TONE[kind]||TONE.set;
@@ -1184,7 +1191,7 @@ function tonesAt(t0,kind){
 function setVol(){try{if(atrim)atrim.gain.setTargetAtTime(0.95*S.vol,actx.currentTime,0.01);}catch(e){}}
 function buzz(){try{if(S.vibe&&navigator.vibrate)navigator.vibrate([200,90,200,90,240]);}catch(e){}}
 function beep(kind){
-  try{if(primeAudio())tonesAt(actx.currentTime,kind||'set');}catch(e){}
+  try{if(primeAudio())tonesAt(actx.currentTime,kind||'rest');}catch(e){}
   buzz();
 }
 function primeAudio(){
@@ -1223,7 +1230,7 @@ function scheduleAlarm(sec){
   alarmRang=false;
   try{
     alarmAt=actx.currentTime+sec;
-    alarmN=tonesAt(alarmAt,'rest');
+    alarmN=tonesAt(alarmAt,'go');
     /* по окончании первой ноты знаем, что очередь реально прозвучала */
     if(alarmN[0])alarmN[0].onended=function(){alarmRang=true;};
   }catch(e){}
@@ -1301,6 +1308,69 @@ function swipeEnd(){
 document.addEventListener('pointerup',swipeEnd);
 document.addEventListener('pointercancel',swipeEnd);
 
+/* ============ ПЕРЕСТАНОВКА УПРАЖНЕНИЙ ============
+   Долгий тап по шапке поднимает карточку, дальше она едет за пальцем.
+   Порядок считаем по серединам соседних карточек: как только палец перешёл
+   середину соседа, они меняются местами прямо на экране — видно, куда
+   встанешь, ещё до того как отпустил. */
+var dragSt=null,dragAt=0;
+function dragCards(){return Array.prototype.slice.call(document.querySelectorAll('#v-work .ex'));}
+function dragStart(art,y){
+  if(!S.active)return;
+  dragSt.on=true;dragSt.y=y;dragSt.dy=0;
+  art.classList.add('dragging');
+  document.body.classList.add('dragmode');
+  buzz();
+}
+function dragEnd(){
+  if(!dragSt)return;
+  clearTimeout(dragSt.timer);
+  var st=dragSt;dragSt=null;
+  if(!st.on)return;
+  dragAt=Date.now();
+  st.art.classList.remove('dragging');
+  st.art.style.transform='';
+  document.body.classList.remove('dragmode');
+  saveOrder(S.active.day,dragCards().map(function(el){return el.dataset.item;}));
+  renderWork();
+  toast('Порядок сохранён');
+}
+document.addEventListener('pointerdown',function(e){
+  if(!S.active)return;
+  var head=e.target.closest('.exh,.exfold');
+  if(!head)return;
+  var art=head.closest('.ex');if(!art)return;
+  dragSt={art:art,y:e.clientY,dy:0,on:false,
+          timer:setTimeout(function(){dragStart(art,e.clientY);},550)};
+});
+document.addEventListener('pointermove',function(e){
+  if(!dragSt)return;
+  if(!dragSt.on){
+    /* палец поехал раньше, чем сработало удержание — это прокрутка */
+    if(Math.abs(e.clientY-dragSt.y)>8)clearTimeout(dragSt.timer);
+    return;
+  }
+  e.preventDefault();
+  dragSt.dy=e.clientY-dragSt.y;
+  var art=dragSt.art;
+  art.style.transform='translateY('+dragSt.dy+'px)';
+  var box=art.getBoundingClientRect(),mid=(box.top+box.bottom)/2;
+  var list=dragCards();
+  for(var i=0;i<list.length;i++){
+    var el=list[i];if(el===art)continue;
+    var b=el.getBoundingClientRect();
+    if(mid>b.top&&mid<b.bottom){
+      var after=mid>(b.top+b.bottom)/2;
+      el.parentNode.insertBefore(art,after?el.nextSibling:el);
+      /* карточка переехала в потоке — сбрасываем смещение под новую точку */
+      dragSt.y=e.clientY;dragSt.dy=0;art.style.transform='';
+      break;
+    }
+  }
+});
+document.addEventListener('pointerup',dragEnd);
+document.addEventListener('pointercancel',dragEnd);
+
 /* ============ НЕТ СЕТИ ============
    navigator.onLine доверять нельзя: он говорит только о том, что есть сетевой
    интерфейс. Wi-Fi без интернета, мобильный без оплаты, самолётный режим на
@@ -1366,7 +1436,7 @@ function wakeOff(){try{if(wlock){wlock.release();wlock=null;}}catch(e){}}
 var restT=null;
 /* Следующий пункт плана после текущего — по нему считаем отдых перед ним */
 function nextPlanItem(item){
-  var ex=DAYS[S.active.day].ex;
+  var ex=orderedEx(S.active.day);
   for(var i=0;i<ex.length;i++)if(ex[i].id===item.id)return ex[i+1]||null;
   return null;
 }
@@ -1396,6 +1466,9 @@ function restFor(exId,kind,idx){
     var wp=(m.wu&&m.wu[idx])?m.wu[idx].p:0.5;
     base=Math.max(20,Math.round((base||90)*wp/5)*5);
   }else{
+    /* Подход A и подход Б — это одно упражнение на две стороны, между ними
+       отдыхать нечего: пока работает одна сторона, вторая отдыхает. */
+    if(m.side&&idx%2===0)return 0;
     var item=planItemFor(exId);
     if(item&&idx>=setsOf(S.active.day,item)-1){
       var nx=nextPlanItem(item);
@@ -1420,7 +1493,9 @@ function startRest(sec,then){
   var end=Date.now()+sec*1000;
   var b=document.getElementById('restbtn');
   askNotify();
-  /* звук ставится в очередь сразу, а не в момент срабатывания таймера */
+  beep('rest');                 /* пошёл отсчёт паузы */
+  /* сигнал начала подхода ставится в очередь сразу, а не в момент
+     срабатывания таймера — иначе он не прозвучит при погасшем экране */
   scheduleAlarm(sec);
   function up(){
     var left=Math.ceil((end-Date.now())/1000);
@@ -1435,7 +1510,7 @@ function startRest(sec,then){
       /* Запланированная очередь молчит, если система успела усыпить звук.
          Через полсекунды проверяем и, если тишина, играем сигнал напрямую —
          так он звучит ровно один раз в любом случае. */
-      setTimeout(function(){if(!alarmRang)beep('rest');},600);
+      setTimeout(function(){if(!alarmRang)beep('go');},600);
       setTimeout(function(){if(!restT)paintRest();},4000);
       if(then)then();
       return;
@@ -1481,10 +1556,12 @@ function finishTimedSet(exId,kind,idx,sec){
   var cur=arr[idx]||{};
   arr[idx]={w:cur.w||0,r:sec,d:true,warn:false,q:cur.q};
   S.active.lastEx=exId;
-  save();beep('set');renderWork();
+  save();renderWork();
   var rest=restFor(exId,kind,idx);
   var item=planItemFor(exId);
   var more=item&&kind==='s'&&idx<setsOf(S.active.day,item)-1;
+  /* упражнение закрыто целиком — свой сигнал, отдельно от пауз */
+  if(!more&&kind==='s')beep('done');
   /* авто-ход: сам отдыхает и сам запускает следующий подход, чтобы за всё
      упражнение не пришлось коснуться экрана ни разу. Когда отдых не
      предусмотрен, всё равно даём 5 секунд — сменить сторону и лечь. */
@@ -1504,38 +1581,49 @@ function autoNextSet(exId,kind,idx){
   var m=EX[exId],sec=rIn?num(rIn.value):0;
   if(!sec)sec=m.repdef||30;
   row.scrollIntoView({block:'center'});
-  startSetTimer(exId,kind,idx,sec,btn,row);
+  /* в авто-ходе подготовка не нужна: перед подходом уже прошёл отдых */
+  startSetTimer(exId,kind,idx,sec,btn,row,true);
 }
-function startSetTimer(exId,kind,idx,sec,btn,row){
+function startSetTimer(exId,kind,idx,sec,btn,row,noPrep){
   stopSetTimer(true);
   /* новый подход начался — отдых больше не идёт, иначе его сигнал
      сработает посреди упражнения */
   stopRest();paintRest();
   primeAudio();
   var m=EX[exId];
-  /* Упражнение на две стороны — один подход это сторона А, короткая пауза
-     на смену и сразу сторона Б. Отдых начинается только после обеих. */
-  var ph=m.twoSide?[{n:'A',s:sec},{n:'смена',s:5},{n:'Б',s:sec}]:[{n:'',s:sec}];
+  /* Фазы подхода. Перед самим отсчётом даём 5 секунд занять позицию, а у
+     двусторонних между сторонами столько же на смену. Каждая фаза со своим
+     сигналом: пауза пошла — «rest», работа пошла — «go». */
+  var ph=[];
+  if(!noPrep)ph.push({n:'готовься',s:5,snd:'rest'});
+  ph.push({n:m.twoSide?'A':'',s:sec,snd:'go'});
+  if(m.twoSide){
+    ph.push({n:'смена',s:5,snd:'rest'});
+    ph.push({n:'Б',s:sec,snd:'go'});
+  }
   var pi=0,end=Date.now()+ph[0].s*1000;
   row.classList.add('timing');
   btn.classList.add('timing');
+  if(ph[0].snd)beep(ph[0].snd);
+  function nextPhase(){
+    pi++;
+    if(pi<ph.length){
+      if(ph[pi].snd)beep(ph[pi].snd);
+      end=Date.now()+ph[pi].s*1000;
+      return true;
+    }
+    clearInterval(setT.iv);setT=null;
+    finishTimedSet(exId,kind,idx,sec);
+    return false;
+  }
   function up(){
     var left=Math.ceil((end-Date.now())/1000);
-    if(left<=0){
-      pi++;
-      if(pi<ph.length){
-        /* между сторонами короткий сигнал, чтобы не смотреть на экран */
-        beep('tick');
-        end=Date.now()+ph[pi].s*1000;
-        return;
-      }
-      clearInterval(setT.iv);setT=null;
-      finishTimedSet(exId,kind,idx,sec);
-      return;
-    }
+    if(left<=0){nextPhase();return;}
     btn.textContent=(ph[pi].n?ph[pi].n+' ':'')+(left>=60?(Math.floor(left/60)+':'+pad(left%60)):left);
   }
-  setT={exId:exId,kind:kind,idx:idx,sec:sec,st:Date.now(),iv:setInterval(up,200)};
+  setT={exId:exId,kind:kind,idx:idx,sec:sec,st:Date.now(),skip:nextPhase,
+        last:function(){return pi>=ph.length-1;},name:function(){return ph[pi].n;},
+        iv:setInterval(up,200)};
   up();
 }
 
@@ -1543,8 +1631,8 @@ function startSetTimer(exId,kind,idx,sec,btn,row){
 /* Как свёрнуто упражнение: 'fold' и 'open' — решение пользователя, пусто —
    автоматика (закрыто целиком и запас проставлен). */
 var foldSt={};
-/* Замена упражнения: в плане слот item.id, а пишем и читаем по exIdFor —
-   поэтому история подменённого упражнения остаётся своей и не смешивается. */
+/* Замена упражнения из интерфейса убрана, но старые тренировки могли писаться
+   с подменой — читаем их по-прежнему через swap, чтобы история не поехала. */
 function exIdFor(item){return (S.active&&S.active.swap&&S.active.swap[item.id])||item.id;}
 /* Ожидаемая длительность: среднее по последним трём таким же тренировкам.
    Пока их меньше трёх — по тому, что есть; совсем без истории — плановая
@@ -1560,6 +1648,20 @@ function minsLabel(k){
   if(!e.m)return '';
   return '~'+e.m+' мин'+(e.n?'':' (план)');
 }
+/* Свой порядок упражнений в тренировке. Хранится списком id: упражнения,
+   которых в списке нет (новые в плане), доезжают в конец сами. */
+function orderedEx(k){
+  var base=DAYS[k].ex,ord=S.order[k];
+  if(!ord||!ord.length)return base;
+  var out=[],seen={};
+  ord.forEach(function(id){
+    var it=base.filter(function(x){return x.id===id;})[0];
+    if(it&&!seen[id]){out.push(it);seen[id]=1;}
+  });
+  base.forEach(function(it){if(!seen[it.id])out.push(it);});
+  return out;
+}
+function saveOrder(k,ids){S.order[k]=ids;save();}
 function frac(done,need){
   var c=need===0?'':(done>=need?' ok':(done>0?' miss':' zero'));
   return '<span class="dn fr'+c+'">'+done+'/'+need+'</span>';
@@ -1605,10 +1707,10 @@ function renderWork(){
   /* Одна галка на всю тренировку: авто-ход всё равно общий, а в каждой
      карточке он занимал место без пользы. Показываем только там, где есть
      подходы на время — иначе переключать нечего. */
-  if(day.ex.some(function(x){return EX[exIdFor(x)].unit==='сек';}))
+  if(orderedEx(S.active.day).some(function(x){return EX[exIdFor(x)].unit==='сек';}))
     out+='<button class="autotop'+(S.auto?' on':'')+'" data-a="auto">'+
          '<span class="ab">'+(S.auto?'✓':'○')+'</span>Авто-ход</button>';
-  day.ex.forEach(function(item,i){
+  orderedEx(S.active.day).forEach(function(item,i){
     var exId=exIdFor(item),m=EX[exId],nSets=setsOf(S.active.day,item);
     var sArr=S.active.e[exId]||[],wArr=S.active.w[exId]||[];
     var doneN=sArr.filter(function(s){return s&&s.d;}).length;
@@ -1619,6 +1721,9 @@ function renderWork(){
        одного тапа. У подходов на время запаса нет — там сворачиваем сразу.
        Подсказка о прибавке веса выносится в свёрнутую строку, иначе она
        появлялась бы ровно в момент сворачивания и оставалась незамеченной. */
+    var cur1=exScore(sArr,m),rec=bestEver(exId);
+    var isPR=doneN>=nSets&&cur1>0&&rec>0&&cur1>=rec-0.01;
+    var prBadge=isPR?'<span class="pr">Рекорд</span>':'';
     var lastSet=sArr[nSets-1];
     var rirSet=(m.unit==='сек')||!!(lastSet&&lastSet.q!==undefined&&lastSet.q!==null);
     var autoFold=doneN>=nSets&&rirSet,fs=foldSt[exId];
@@ -1628,7 +1733,7 @@ function renderWork(){
       var fh=progHint(item,m,sArr,nSets);
       out+='<article class="ex'+(doneN>=nSets?' done':'')+'"'+tag+'>'+
         '<button class="exfold" data-a="fold"><span class="exn">'+(i+1)+'</span>'+
-        '<span class="ext"><h3>'+m.name+'</h3><span class="fsum">'+sum+'</span>'+
+        '<span class="ext"><h3>'+m.name+prBadge+'</h3><span class="fsum">'+sum+'</span>'+
         (fh?'<span class="fsum" style="color:var(--ok)">↑ '+fh.replace('Все подходы на верхней границе: в следующий раз ','след. раз ')+'</span>':'')+
         '</span><span class="foldi">▾</span></button></article>';
       return;
@@ -1638,16 +1743,12 @@ function renderWork(){
     var base=(sArr[0]&&sArr[0].w)||(prevS&&prevS[0]?prevS[0].w:0)||(m.bw||m.noW?0:m.start);
     var cust=S.custom[exId]||{};
 
-    /* лучший e1RM в текущей сессии */
-    var cur1=0;sArr.forEach(function(s){if(s&&s.d){var q=e1rm(s.w,s.r,m);if(q>cur1)cur1=q;}});
-    var rec=bestEver(exId);
-    var isPR=cur1>0&&cur1>=rec-0.01&&rec>0;
 
     out+='<article class="ex'+(doneN>=nSets?' done':'')+'"'+tag+'>'+
       '<button class="exh" data-a="fold"><span class="exn">'+(i+1)+'</span><span class="ext">'+
-      '<h3>'+m.name+(isPR?'<span class="pr">Рекорд</span>':'')+(exId!==item.id?'<span class="grp">замена</span>':'')+'</h3>'+
+      '<h3>'+m.name+prBadge+'</h3>'+
       '<span class="tgt">'+nSets+' × '+item.reps+'<span class="grp">'+m.grp+'</span></span>'+
-      '</span><span class="foldi">▴</span></button><p class="hint">'+m.hint+'</p>';
+      '</span><span class="grip">⠿</span><span class="foldi">▴</span></button><p class="hint">'+m.hint+'</p>';
     if(m.e1&&cur1>0) out+='<div class="e1">Средний 1ПМ за подходы: '+Math.round(cur1)+' кг'+(rec>0?'  ·  рекорд '+Math.round(rec)+' кг':'')+'</div>';
     var ad=S.advice&&S.advice.ex&&S.advice.ex[exId];
     if(ad){
@@ -1683,7 +1784,7 @@ function renderWork(){
       out+=setRow(m,'s',j,wv2,rv2,!!st2.d,pv2,!!st2.warn,st2.q);
     }
     out+='<div class="setbtns"><button data-a="set+">+ подход</button><button data-a="set-">− подход</button>'+
-         '<button data-a="swap">Заменить</button><button data-a="note">Примечание</button>'+
+         '<button data-a="note">Примечание</button>'+
 '</div>';
     out+='</div><button class="tech-btn" aria-expanded="false" data-a="tech">Техника · отдых '+(m.rest||'—')+'</button>'+
          '<div class="tech">'+techHtml(m,exId)+'</div></article>';
@@ -1770,8 +1871,10 @@ function arm(el,label){disarm();armed={el:el,txt:el.textContent,t:setTimeout(dis
 
 /* ============ КЛИКИ ============ */
 document.addEventListener('click',function(ev){
-  /* клик сразу после смахивания игнорируем — карточка уже уехала */
-  if(Date.now()-swipeAt<400)return;
+  /* клик сразу после жеста игнорируем: карточка уже уехала или переставлена */
+  /* после перетаскивания карточка перерисована, поэтому хватает короткого
+     окна: оно гасит только «хвостовой» клик того же жеста */
+  if(Date.now()-swipeAt<400||Date.now()-dragAt<250)return;
   var ed=ev.target.closest('[data-edit]');
   if(ed&&!ev.target.closest('button')){openEdit(+ed.dataset.edit);return;}
   var b=ev.target.closest('button');
@@ -1790,6 +1893,7 @@ document.addEventListener('click',function(ev){
       if(S.active&&S.active.snap){
         S.setsOv=S.active.snap.setsOv||{};
         S.custom=S.active.snap.custom||{};
+        S.order=S.active.snap.order||{};
       }
       S.active=null;foldSt={};wakeOff();save();renderWork();setClock(null);paintRest();
       toast('Тренировка отменена, изменения откачены');
@@ -1816,8 +1920,6 @@ document.addEventListener('click',function(ev){
   if(a==='advtog'){advOpen=!advOpen;if(!advOpen)advMarkSeen();renderWork();return;}
   if(a==='fold'){var fx=b.closest('.ex').dataset.ex;
     foldSt[fx]=b.classList.contains('exfold')?'open':'fold';renderWork();return;}
-  if(a==='swap'){openSwap(b.closest('.ex').dataset.item);return;}
-  if(a==='doswap'){doSwap();return;}
   if(a==='set+'||a==='set-'){
     var host=b.closest('.ex'),itemId=host.dataset.item;
     var it=DAYS[S.active.day].ex.filter(function(x){return x.id===itemId;})[0];
@@ -1843,7 +1945,7 @@ document.addEventListener('click',function(ev){
     toast(S.bad[bw]?'Неделя отмечена трудной — план урезан':'Обычный план возвращён');return;}
   if(a==='sec'){var sk=b.dataset.s;openSec[sk]=!openSec[sk];renderStat();return;}
   if(a==='advget'){toast('Смотрю разбор…');cloudAdvice(false);return;}
-  if(a==='voltest'){primeAudio();beep('rest');return;}
+  if(a==='voltest'){primeAudio();beep('rest');setTimeout(function(){beep('go')},900);return;}
   if(a==='vibe'){S.vibe=!S.vibe;save();renderStat();
     if(S.vibe)buzz();
     toast(S.vibe?'Вибрация включена':'Вибрация выключена');return;}
@@ -1887,12 +1989,13 @@ document.addEventListener('click',function(ev){
        галочке, отметка снимется. */
     if(m.unit==='сек'&&nd){
       if(setT&&setT.exId===exId2&&setT.kind===kind&&setT.idx===idx){
-        /* засчитываем запланированное время, а не отсчитанное: тапают
-           именно чтобы закрыть подход, а не чтобы урезать его до секунд */
-        var done=setT.sec;
-        stopSetTimer(true);
-        finishTimedSet(exId2,kind,idx,done);
-        toast('Засчитано: '+done+' сек');
+        /* Тап во время отсчёта закрывает текущую фазу, а не весь подход:
+           сторона A, затем смена, затем сторона Б. В последней фазе подход
+           засчитывается целиком и по запланированному времени, а не по
+           отсчитанному — тапают, чтобы закрыть, а не чтобы урезать. */
+        var wasLast=setT.last(),ph=setT.name(),sc=setT.sec;
+        setT.skip();
+        toast(wasLast?'Засчитано: '+sc+' сек':(ph?'Сторона '+ph+' закрыта':'Дальше'));
         return;
       }
       startSetTimer(exId2,kind,idx,rv||m.repdef||30,b,row);
@@ -1981,7 +2084,8 @@ function startDay(k){
   /* Снимок изменяемых настроек: отмена тренировки должна откатывать и число
      подходов, и правки примечаний, а не только записанные подходы. */
   S.active={day:k,type:DAYS[k].type,s:Date.now(),pAcc:0,e:{},w:{},swap:{},
-            snap:{setsOv:copy(S.setsOv),custom:JSON.parse(JSON.stringify(S.custom))}};
+            snap:{setsOv:copy(S.setsOv),custom:JSON.parse(JSON.stringify(S.custom)),
+                  order:JSON.parse(JSON.stringify(S.order))}};
   accSaveAt=Date.now();save();renderWork();setClock(true);paintRest();wakeOn();window.scrollTo(0,0);
 }
 
@@ -2031,33 +2135,6 @@ function doFinish(){
   toast('Записано: '+countSets(l)+' подходов, '+mins+' мин · '+kcalOf(l)+' ккал');
   cloudPush(true);
 }
-/* ============ ЗАМЕНА УПРАЖНЕНИЯ ============ */
-function openSwap(itemId){
-  var cur=exIdFor({id:itemId}),m=EX[cur];
-  var same=[],other=[];
-  Object.keys(EX).forEach(function(k){
-    if(k===cur||EX[k].legacy)return;
-    /* упражнение без веса вместо силового — почти всегда ошибка, не предлагаем */
-    if(EX[k].noW&&!m.noW)return;
-    (EX[k].grp===m.grp?same:other).push(k);
-  });
-  var opt=function(k){return '<option value="'+k+'">'+EX[k].name+'</option>';};
-  openModal('<h3>Замена упражнения</h3><p class="sub">Сейчас: '+m.name+'. Тренажёр занят — подставь аналог. История подменённого упражнения останется отдельной, ничего не перемешается.</p>'+
-    '<select id="swsel"><option value="'+itemId+'">— вернуть по плану: '+EX[itemId].name+' —</option>'+
-    (same.length?'<optgroup label="Та же группа: '+m.grp+'">'+same.map(opt).join('')+'</optgroup>':'')+
-    '<optgroup label="Остальные">'+other.map(opt).join('')+'</optgroup></select>'+
-    '<input type="hidden" id="swid" value="'+itemId+'">'+
-    '<button class="big go" data-a="doswap">Заменить</button>'+
-    '<button class="big fin gap" data-a="mclose">Назад</button>');
-}
-function doSwap(){
-  var itemId=document.getElementById('swid').value,nv=document.getElementById('swsel').value;
-  S.active.swap=S.active.swap||{};
-  if(nv===itemId)delete S.active.swap[itemId];else S.active.swap[itemId]=nv;
-  save();closeModal();renderWork();
-  toast(nv===itemId?'Вернул упражнение по плану':'Заменено: '+EX[nv].name);
-}
-
 /* ============ ПАДЕЛ ============ */
 function openPadel(){
   var w=bodyW();
@@ -2705,13 +2782,14 @@ function applyDump(d){
   S.log=d.log||[];S.body=d.body||[];S.custom=d.custom||{};S.setsOv=d.setsOv||{};
   if(d.plan)S.plan=d.plan;
   S.planHist=d.planHist||{};S.bad=d.bad||{};S.weekOk=d.weekOk||{};
+  if(d.order)S.order=d.order;
   if(d.gain&&GAIN[d.gain])S.gain=d.gain;
   fixPlan();backfillPlans();
 }
 /* Советы сюда не входят: они живут в отдельном advice.json, который приложение
    только читает. Токен не входит тем более. */
 function dump(){return JSON.stringify({v:3,log:S.log,body:S.body,custom:S.custom,setsOv:S.setsOv,
-  plan:S.plan,planHist:S.planHist,bad:S.bad,weekOk:S.weekOk,gain:S.gain});}
+  plan:S.plan,planHist:S.planHist,bad:S.bad,weekOk:S.weekOk,gain:S.gain,order:S.order});}
 function dl(name,text,mime){
   try{
     var b=new Blob([text],{type:mime||'application/json'}),u=URL.createObjectURL(b),a=document.createElement('a');
@@ -2843,6 +2921,7 @@ store.get('gym:v2').then(function(d){
   if(d.auto!==undefined)S.auto=!!d.auto;
   if(d.vol!==undefined)S.vol=Math.max(0,Math.min(1,+d.vol||0));
   if(d.vibe!==undefined)S.vibe=!!d.vibe;
+  S.order=d.order||{};
   boot(false);
 });
 function boot(migrated){
