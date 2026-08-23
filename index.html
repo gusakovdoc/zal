@@ -261,7 +261,7 @@ textarea.small{height:74px}
 .ex.dragging{transform:scale(1.02);box-shadow:0 14px 34px rgba(0,0,0,.75);border-color:var(--acc);position:relative;z-index:5;transition:none}
 body.dragmode{overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none}
 .grip{color:var(--dim);font-size:14px;letter-spacing:-2px;flex:0 0 auto;padding-right:2px}
-.exh,.exfold{touch-action:pan-y}
+.exh,.exfold{touch-action:none}
 
 /* заголовок раскрытого упражнения — кнопка сворачивания */
 button.exh{width:100%;background:none;border:0;text-align:left;font:inherit;color:inherit}
@@ -699,7 +699,10 @@ var BODY=[
 {k:'k1',n:'Калипер, бок',u:'мм',s:.5,h:'2 см выше подвздошной справа'},
 {k:'k2',n:'Калипер, живот',u:'мм',s:.5,h:'2 см слева от пупка'},
 {k:'st',n:'Шаги в день',u:'шт',s:500,h:'среднее за неделю из часов — падел вычтется автоматически'},
-{k:'kc',n:'Съедено, ккал в день',u:'ккал',s:50,h:'среднее за неделю из FatSecret — по нему считается реальный расход'}];
+{k:'kc',n:'Съедено, ккал в день',u:'ккал',s:50,h:'среднее за неделю из FatSecret — по нему считается реальный расход'},
+{k:'pr',n:'Белки за неделю',u:'г',s:50,h:'сумма за все семь дней, не среднее'},
+{k:'ft',n:'Жиры за неделю',u:'г',s:20,h:'сумма за все семь дней'},
+{k:'cb',n:'Углеводы за неделю',u:'г',s:50,h:'сумма за все семь дней'}];
 
 var FACTS=[
 'Мышцы за две недели без зала практически не теряются. Падает гликоген, вода и рабочие веса на 5–10% — это возвращается за пару тренировок.',
@@ -996,6 +999,19 @@ function nutriAdvice(N,wk){
   var bf1=bodyAt(wk,'bf'),bf0=bodyAt(back,'bf');
   if(bf1&&bf0&&bf1-bf0>1) t.push('Процент жира за месяц +'+fmtW(Math.round((bf1-bf0)*10)/10)+'. Для набора это много — урежь избыток примерно вдвое.');
 
+  /* Фактические макросы. Пишутся суммой за неделю, поэтому делим на семь. */
+  var gp=bodyAt(wk,'pr'),gf=bodyAt(wk,'ft'),gc=bodyAt(wk,'cb');
+  if(gp||gf||gc){
+    var dP=Math.round((gp||0)/7),dF=Math.round((gf||0)/7),dC=Math.round((gc||0)/7);
+    t.push('По факту в день: белок '+dP+' г, жиры '+dF+' г, углеводы '+dC+' г. Цель — '+N.prot+', '+N.fat+', '+N.carb+'.');
+    if(gp&&dP<N.prot-15) t.push('Белка не хватает примерно '+(N.prot-dP)+' г в день. Это главный дефицит из трёх: углеводы добираются сами, а белок — нет.');
+    else if(gp&&dP>N.prot+40) t.push('Белка на '+(dP-N.prot)+' г больше нужного. Не вредно, но эти калории полезнее отдать углеводам — они дешевле и лучше идут в тренировку.');
+    if(gf&&dF<N.fat-10) t.push('Жиров '+dF+' г при нижней границе '+N.fat+'. Ниже неё начинает страдать гормональный фон, добери орехами или маслом.');
+    /* сходимость с дневником: расхождение обычно значит пропущенный приём */
+    var mk=dP*4+dF*9+dC*4;
+    if(mk&&N.eaten&&Math.abs(mk-N.eaten)>N.eaten*0.12)
+      t.push('Макросы складываются в '+mk+' ккал в день, а в калориях записано '+N.eaten+'. Расхождение '+Math.abs(mk-N.eaten)+' — где-то потерялся приём или цифры из разных недель.');
+  }
   t.push('Белок '+N.prot+' г — это 1,8 г на кг, выше прироста не даёт. Жиры '+N.fat+' г — нижняя граница, ниже падают гормоны. Остальное углеводами: их проще всего добрать.');
   if(N.perDay>400) t.push('Тренировочный расход высокий: '+N.perDay+' ккал в день в среднем. В дни падела добирай сверху 300–400 ккал углеводами, иначе набор встанет на месте.');
   return t;
@@ -1320,6 +1336,9 @@ function dragStart(art,y){
   dragSt.on=true;dragSt.y=y;dragSt.dy=0;
   art.classList.add('dragging');
   document.body.classList.add('dragmode');
+  /* Забираем указатель себе: без захвата браузер уводит жест в прокрутку и
+     присылает pointercancel — перетаскивание обрывалось на первом же шаге. */
+  try{if(dragSt.head&&dragSt.head.setPointerCapture)dragSt.head.setPointerCapture(dragSt.pid);}catch(e){}
   buzz();
 }
 function dragEnd(){
@@ -1331,6 +1350,7 @@ function dragEnd(){
   st.art.classList.remove('dragging');
   st.art.style.transform='';
   document.body.classList.remove('dragmode');
+  try{if(st.head&&st.head.releasePointerCapture)st.head.releasePointerCapture(st.pid);}catch(e){}
   saveOrder(S.active.day,dragCards().map(function(el){return el.dataset.item;}));
   renderWork();
   toast('Порядок сохранён');
@@ -1340,7 +1360,7 @@ document.addEventListener('pointerdown',function(e){
   var head=e.target.closest('.exh,.exfold');
   if(!head)return;
   var art=head.closest('.ex');if(!art)return;
-  dragSt={art:art,y:e.clientY,dy:0,on:false,
+  dragSt={art:art,head:head,pid:e.pointerId,y:e.clientY,dy:0,on:false,
           timer:setTimeout(function(){dragStart(art,e.clientY);},550)};
 });
 document.addEventListener('pointermove',function(e){
@@ -1351,19 +1371,24 @@ document.addEventListener('pointermove',function(e){
     return;
   }
   e.preventDefault();
-  dragSt.dy=e.clientY-dragSt.y;
   var art=dragSt.art;
+  dragSt.dy=e.clientY-dragSt.y;
   art.style.transform='translateY('+dragSt.dy+'px)';
-  var box=art.getBoundingClientRect(),mid=(box.top+box.bottom)/2;
+  /* Меняемся местами с соседом, чью середину перешёл ПАЛЕЦ, а не карточка:
+     так перестановка идёт ровно туда, куда ведёшь, и не упирается в соседа. */
   var list=dragCards();
   for(var i=0;i<list.length;i++){
     var el=list[i];if(el===art)continue;
-    var b=el.getBoundingClientRect();
-    if(mid>b.top&&mid<b.bottom){
-      var after=mid>(b.top+b.bottom)/2;
-      el.parentNode.insertBefore(art,after?el.nextSibling:el);
-      /* карточка переехала в потоке — сбрасываем смещение под новую точку */
-      dragSt.y=e.clientY;dragSt.dy=0;art.style.transform='';
+    var b=el.getBoundingClientRect(),mid=(b.top+b.bottom)/2;
+    var below=!!(art.compareDocumentPosition(el)&Node.DOCUMENT_POSITION_FOLLOWING);
+    if((below&&e.clientY>mid)||(!below&&e.clientY<mid)){
+      var t0=art.getBoundingClientRect().top;
+      el.parentNode.insertBefore(art,below?el.nextSibling:el);
+      /* Карточка переехала в потоке. Сдвигаем точку отсчёта ровно на этот
+         скачок — иначе она прыгает из-под пальца и перетаскивание встаёт. */
+      dragSt.y+=art.getBoundingClientRect().top-t0;
+      dragSt.dy=e.clientY-dragSt.y;
+      art.style.transform='translateY('+dragSt.dy+'px)';
       break;
     }
   }
@@ -2868,6 +2893,9 @@ function doAi(){
   L.push('  расход по формуле '+Nn.tdee+' ккал'+
          (Nn.tdeeReal!==null?', по факту '+Nn.tdeeReal+' ккал (ел '+Nn.eaten+', рос '+fmtW(Nn.rate)+' кг/нед)':', факта нет — не заполнено съеденное'));
   L.push('  цель '+Nn.target+' ккал: белок '+Nn.prot+' г, жиры '+Nn.fat+' г, углеводы '+Nn.carb+' г');
+  var wkN=weekKey(Date.now()),ap=bodyAt(wkN,'pr'),af=bodyAt(wkN,'ft'),ac=bodyAt(wkN,'cb');
+  if(ap||af||ac)
+    L.push('  по факту в день: белок '+Math.round((ap||0)/7)+' г, жиры '+Math.round((af||0)/7)+' г, углеводы '+Math.round((ac||0)/7)+' г');
   L.push('  темп веса: '+(Nn.rate===null?'мало данных':(Nn.rate>=0?'+':'')+fmtW(Nn.rate)+' кг/нед'));
   var t=L.join('\n');
   document.getElementById('io').value=t;
