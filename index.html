@@ -259,9 +259,13 @@ textarea.small{height:74px}
 /* перетаскивание упражнений */
 .ex{transition:transform .12s,box-shadow .12s}
 .ex.dragging{transform:scale(1.02);box-shadow:0 14px 34px rgba(0,0,0,.75);border-color:var(--acc);position:relative;z-index:5;transition:none}
-body.dragmode{overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none}
+body.reordermode{user-select:none;-webkit-user-select:none}
+.robar{position:sticky;top:0;z-index:28;display:flex;align-items:center;gap:10px;background:var(--acc-bg);border:1px solid var(--acc);border-radius:var(--r-s);padding:10px 12px;margin:0 0 12px;font-size:13.5px;color:var(--acc);line-height:1.35}
+.robar b{flex:1;font-weight:600;color:var(--tx);font-size:13.5px}
+.robar .sm{flex:0 0 auto;background:var(--acc);border-color:var(--acc);color:var(--ink)}
 .grip{color:var(--dim);font-size:14px;letter-spacing:-2px;flex:0 0 auto;padding-right:2px}
-.exh,.exfold{touch-action:none}
+.exh,.exfold{touch-action:pan-y}
+body.reordermode .ex{touch-action:none}
 
 /* заголовок раскрытого упражнения — кнопка сворачивания */
 button.exh{width:100%;background:none;border:0;text-align:left;font:inherit;color:inherit}
@@ -605,16 +609,17 @@ el_sup:{name:'Супинация и пронация с гантелью',grp:'�
  how:['Предплечье на бедре, кисть свисает, локоть согнут под 90°.','Возьми гантель за один конец — второй конец перевешивает.','Медленно поверни ладонь вверх до упора, пауза 1 сек.','Так же медленно поверни ладонью вниз. Одно повторение — это оба направления.'],
  watch:['Двигается только предплечье, плечо прижато к боку.','Если тяжело — перехвати гантель ближе к центру, рычаг станет короче.'],
  note:'Работает супинатор — вторая по частоте причина боли в наружном локте после разгибателей.'},
-el_stretch:{name:'Растяжка разгибателей предплечья',twoSide:1,grp:'Локоть',noW:1,unit:'сек',repdef:30,repstep:10,rest:'без паузы',
- hint:'Рука прямая, ладонь от себя вниз. Тянуть до натяжения, не до боли.',
- how:['Вытяни больную руку вперёд, локоть полностью выпрямлен.','Опусти кисть вниз, пальцы смотрят в пол.','Второй рукой мягко дотяни кисть к себе, до чувства натяжения по верху предплечья.','Держи 30 секунд ровно, не пружинь. Потом вторая рука в том же подходе.'],
+el_stretch:{name:'Растяжка разгибателей предплечья',grp:'Локоть',noW:1,unit:'сек',repdef:30,repstep:10,rest:'без паузы',
+ hint:'Только больная рука. Рука прямая, ладонь от себя вниз, тянуть до натяжения, не до боли.',
+ how:['Вытяни больную руку вперёд, локоть полностью выпрямлен.','Опусти кисть вниз, пальцы смотрят в пол.','Второй рукой мягко дотяни кисть к себе, до чувства натяжения по верху предплечья.','Держи 30 секунд ровно, не пружинь.'],
  watch:['Локоть остаётся прямым — согнутый локоть убирает всю растяжку.','Плечо не поднимается к уху.'],
  note:'Делай после эксцентрики, а не до неё. И отдельно 2–3 раза в течение дня — это ускоряет восстановление.'},
-el_grip:{name:'Сжатие кистевого эспандера',grp:'Локоть',start:0,step:1,hand:1,repdef:20,rest:'45 сек',
- hint:'Только больная рука. Сжатие 2 секунды, отпускание 2 секунды.',
- how:['Возьми мяч или эспандер в руку, локоть согнут, предплечье лежит на бедре.','Сжимай 2 секунды до умеренного усилия, не до максимума.','Держи 2 секунды и медленно отпускай.','Вес в поле слева не нужен — пиши 0, если работаешь мячом.'],
- watch:['Запястье остаётся прямым, не сгибается при сжатии.','Боли быть не должно вообще — это восстановительная работа на кровоток.'],
- note:'Улучшает кровоток в зоне прикрепления сухожилия. Можно делать хоть каждый день, в том числе в дни без тренировок.'},
+h_fingers:{name:'Отжимания на пальцах',grp:'Локоть',start:0,step:2,repdef:8,rest:'60 сек',
+ hint:'С колен, пальцы жёстко расставлены как купол. Локти вдоль корпуса.',
+ how:['Встань на колени, ладони под плечами, опора только на подушечки пальцев.','Пальцы широко расставь и держи полусогнутыми куполом — они не должны прогибаться назад.','Запястье прямое, локти идут вдоль корпуса под 45°, а не в стороны.','Опускайся до касания грудью кулака второй руки условно, вверх без рывка. Начни с 5–8 повторов.'],
+ watch:['Пальцы прогнулись назад — подход окончен, дальше идёт нагрузка на сустав, а не на мышцу.','Плечи не уезжают к ушам, поясница не провисает.','Начинай только с колен: с прямых ног нагрузка на пальцы вырастает вдвое.'],
+ stop:'Острая боль в наружном надмыщелке — прекрати. Это упражнение усиливает хват и предплечье, но при обострении оно ждёт своей очереди.',
+ note:'Заменило эспандер: тот ты и так делаешь в течение дня. Прогрессия — сначала повторы до 12, потом прямые ноги, и только потом жилет.'},
 
 /* --- АРХИВ ---
    Упражнение убрано из плана, но осталось в старых записях. Без карточки
@@ -633,7 +638,7 @@ leg_curl:90,rear_delt:60,hanging_leg:60,pallof:45,
 h_hip:0,h_tspine:0,h_book:0,h_door:0,h_glute:0,
 h_deadbug:45,h_birddog:45,h_splank:45,h_bridge:45,h_wheel:90,
 h_pushup:90,h_curl:60,h_hammer:60,h_tri_oh:60,h_kick:60,h_row:90,
-el_ecc:60,el_sup:45,el_stretch:0,el_grip:45};
+el_ecc:60,el_sup:45,el_stretch:0,h_fingers:60};
 function restLabel(s){
   if(!s)return 'без паузы';
   return (s>=60&&s%60===0)?(s/60)+' мин':s+' сек';
@@ -676,7 +681,7 @@ prio:{t:'Приоритет: грудь, спина, руки',type:'home',mins:
  {id:'h_kick',sets:2,reps:'12–15',rd:14}]},
 elbow:{t:'Локоть: восстановление',type:'home',mins:10,ex:[
  {id:'el_ecc',sets:3,reps:'15',rd:15},{id:'el_sup',sets:3,reps:'15',rd:15},
- {id:'el_grip',sets:3,reps:'20',rd:20},{id:'el_stretch',sets:3,reps:'30 сек × сторона',rd:30}]},
+ {id:'h_fingers',sets:3,reps:'8–12',rd:8},{id:'el_stretch',sets:3,reps:'30 сек',rd:30}]},
 padel:{t:'Падел',type:'padel',mins:90,ex:[]}
 };
 var HOME_KEYS=['mob','core','wheel','prio','elbow'];
@@ -1195,7 +1200,8 @@ function audioOut(){
 var TONE={
   rest:[[659,0,.28],[988,.30,.42]],                    /* отсчёт пошёл: вверх */
   go:  [[988,0,.28],[659,.30,.42]],                    /* подход пошёл: вниз */
-  done:[[1046,0,.24],[1319,.26,.24],[1568,.52,.42]]    /* упражнение закрыто */
+  done:[[1046,0,.24],[1319,.26,.24],[1568,.52,.42]],   /* упражнение закрыто */
+  tick:[[1319,0,.06]]                                  /* отсчёт последних секунд */
 };
 function tonesAt(t0,kind){
   var dst=audioOut(),made=[],spec=TONE[kind]||TONE.set;
@@ -1219,10 +1225,12 @@ function tonesAt(t0,kind){
    меняется только уровень. */
 function setVol(){try{if(atrim)atrim.gain.setTargetAtTime(0.95*S.vol,actx.currentTime,0.01);}catch(e){}}
 function buzz(){try{if(S.vibe&&navigator.vibrate)navigator.vibrate([200,90,200,90,240]);}catch(e){}}
-function beep(kind){
+/* tone — только звук; beep — звук вместе с вибрацией. Отсчёт секунд идёт
+   через tone: вибрировать пять раз подряд перед каждым подходом незачем. */
+function tone(kind){
   try{if(primeAudio())tonesAt(actx.currentTime,kind||'rest');}catch(e){}
-  buzz();
 }
+function beep(kind){tone(kind);buzz();}
 function primeAudio(){
   try{
     var C=window.AudioContext||window.webkitAudioContext;if(!C)return false;
@@ -1259,9 +1267,14 @@ function scheduleAlarm(sec){
   alarmRang=false;
   try{
     alarmAt=actx.currentTime+sec;
-    alarmN=tonesAt(alarmAt,'go');
+    /* Последние пять секунд отбиваем короткими тиками. Ставим их в ту же
+       очередь, что и сам сигнал, иначе при погасшем экране их не будет. */
+    for(var i=5;i>=1;i--)if(sec>i+0.2)alarmN=alarmN.concat(tonesAt(alarmAt-i,'tick'));
+    alarmN=alarmN.concat(tonesAt(alarmAt,'go'));
     /* по окончании первой ноты знаем, что очередь реально прозвучала */
-    if(alarmN[0])alarmN[0].onended=function(){alarmRang=true;};
+    /* флаг вешаем на сам сигнал, а не на тик: тики короче и звучат раньше */
+    var lastN=alarmN[alarmN.length-2];
+    if(lastN)lastN.onended=function(){alarmRang=true;};
   }catch(e){}
 }
 /* Уже зазвучавший сигнал не обрываем. Иначе следующий подход, начатый сразу
@@ -1338,21 +1351,27 @@ document.addEventListener('pointerup',swipeEnd);
 document.addEventListener('pointercancel',swipeEnd);
 
 /* ============ ПЕРЕСТАНОВКА УПРАЖНЕНИЙ ============
-   Долгий тап по шапке поднимает карточку, дальше она едет за пальцем.
-   Порядок считаем по серединам соседних карточек: как только палец перешёл
-   середину соседа, они меняются местами прямо на экране — видно, куда
-   встанешь, ещё до того как отпустил. */
-var dragSt=null,dragAt=0;
+   Перетаскивание вынесено в отдельный режим, а не живёт поверх обычного
+   экрана. Иначе шапку приходилось отнимать у прокрутки: жест по ней браузер
+   считает скроллом и обрывает перетаскивание. Теперь удержание шапки только
+   ВХОДИТ в режим — карточки сворачиваются, весь список помещается на экран,
+   и уже там они таскаются с первого касания. Выход возвращает всё как было. */
+var dragSt=null,dragAt=0,reorder=false,foldSnap=null;
 function dragCards(){return Array.prototype.slice.call(document.querySelectorAll('#v-work .ex'));}
-function dragStart(art,y){
-  if(!S.active)return;
-  dragSt.on=true;dragSt.y=y;dragSt.dy=0;
-  art.classList.add('dragging');
-  document.body.classList.add('dragmode');
-  /* Забираем указатель себе: без захвата браузер уводит жест в прокрутку и
-     присылает pointercancel — перетаскивание обрывалось на первом же шаге. */
-  try{if(dragSt.head&&dragSt.head.setPointerCapture)dragSt.head.setPointerCapture(dragSt.pid);}catch(e){}
-  buzz();
+function enterReorder(){
+  if(!S.active||reorder)return;
+  foldSnap=JSON.parse(JSON.stringify(foldSt));
+  orderedEx(S.active.day).forEach(function(it){foldSt[exIdFor(it)]='fold';});
+  reorder=true;dragAt=Date.now();buzz();
+  renderWork();window.scrollTo(0,0);
+  toast('Порядок упражнений: тащи карточки, потом «Готово»');
+}
+function exitReorder(){
+  if(!reorder)return;
+  reorder=false;
+  if(foldSnap)foldSt=foldSnap;
+  foldSnap=null;dragAt=Date.now();
+  renderWork();
 }
 function dragEnd(){
   if(!dragSt)return;
@@ -1362,24 +1381,31 @@ function dragEnd(){
   dragAt=Date.now();
   st.art.classList.remove('dragging');
   st.art.style.transform='';
-  document.body.classList.remove('dragmode');
   try{if(st.head&&st.head.releasePointerCapture)st.head.releasePointerCapture(st.pid);}catch(e){}
   saveOrder(S.active.day,dragCards().map(function(el){return el.dataset.item;}));
-  renderWork();
-  toast('Порядок сохранён');
 }
 document.addEventListener('pointerdown',function(e){
   if(!S.active)return;
+  var art=e.target.closest('.ex');
+  if(!art)return;
+  if(reorder){
+    /* в режиме перестановки карточка берётся сразу, без удержания */
+    if(e.target.closest('button')&&!e.target.closest('.exfold'))return;
+    dragSt={art:art,head:art,pid:e.pointerId,y:e.clientY,dy:0,on:true};
+    art.classList.add('dragging');
+    try{art.setPointerCapture(e.pointerId);}catch(err){}
+    return;
+  }
   var head=e.target.closest('.exh,.exfold');
   if(!head)return;
-  var art=head.closest('.ex');if(!art)return;
   dragSt={art:art,head:head,pid:e.pointerId,y:e.clientY,dy:0,on:false,
-          timer:setTimeout(function(){dragStart(art,e.clientY);},550)};
+          timer:setTimeout(enterReorder,550)};
 });
 document.addEventListener('pointermove',function(e){
   if(!dragSt)return;
   if(!dragSt.on){
-    /* палец поехал раньше, чем сработало удержание — это прокрутка */
+    /* палец поехал раньше, чем сработало удержание — значит это прокрутка,
+       и она должна работать как обычно */
     if(Math.abs(e.clientY-dragSt.y)>8)clearTimeout(dragSt.timer);
     return;
   }
@@ -1654,9 +1680,12 @@ function startSetTimer(exId,kind,idx,sec,btn,row,noPrep){
     finishTimedSet(exId,kind,idx,sec);
     return false;
   }
+  var tickAt=0;
   function up(){
     var left=Math.ceil((end-Date.now())/1000);
     if(left<=0){nextPhase();return;}
+    /* последние три секунды паузы отбиваем тиками; во время работы молчим */
+    if(ph[pi].snd==='rest'&&left<=3&&left!==tickAt){tickAt=left;tone('tick');}
     btn.textContent=(ph[pi].n?ph[pi].n+' ':'')+(left>=60?(Math.floor(left/60)+':'+pad(left%60)):left);
   }
   setT={exId:exId,kind:kind,idx:idx,sec:sec,st:Date.now(),skip:nextPhase,
@@ -1742,10 +1771,14 @@ function renderWork(){
   var day=DAYS[S.active.day];
   sub.textContent=day.t+' · идёт';
   var out='';
+  document.body.classList.toggle('reordermode',reorder);
+  if(reorder)
+    out+='<div class="robar"><b>Перетащи упражнения в нужном порядке</b>'+
+         '<button class="sm" data-a="rodone">Готово</button></div>';
   /* Одна галка на всю тренировку: авто-ход всё равно общий, а в каждой
      карточке он занимал место без пользы. Показываем только там, где есть
      подходы на время — иначе переключать нечего. */
-  if(orderedEx(S.active.day).some(function(x){return EX[exIdFor(x)].unit==='сек';}))
+  if(!reorder&&orderedEx(S.active.day).some(function(x){return EX[exIdFor(x)].unit==='сек';}))
     out+='<button class="autotop'+(S.auto?' on':'')+'" data-a="auto">'+
          '<span class="ab">'+(S.auto?'✓':'○')+'</span>Авто-ход</button>';
   orderedEx(S.active.day).forEach(function(item,i){
@@ -1909,10 +1942,9 @@ function arm(el,label){disarm();armed={el:el,txt:el.textContent,t:setTimeout(dis
 
 /* ============ КЛИКИ ============ */
 document.addEventListener('click',function(ev){
-  /* клик сразу после жеста игнорируем: карточка уже уехала или переставлена */
-  /* после перетаскивания карточка перерисована, поэтому хватает короткого
-     окна: оно гасит только «хвостовой» клик того же жеста */
-  if(Date.now()-swipeAt<400||Date.now()-dragAt<250)return;
+  /* Хвостовой клик того же жеста гасим, но только на самой карточке —
+     иначе кнопка «Готово» рядом переставала нажиматься сразу после перетаскивания. */
+  if((Date.now()-swipeAt<400||Date.now()-dragAt<250)&&ev.target.closest('.ex,[data-tip]'))return;
   var ed=ev.target.closest('[data-edit]');
   if(ed&&!ev.target.closest('button')){openEdit(+ed.dataset.edit);return;}
   var b=ev.target.closest('button');
@@ -1933,7 +1965,9 @@ document.addEventListener('click',function(ev){
         S.custom=S.active.snap.custom||{};
         S.order=S.active.snap.order||{};
       }
-      S.active=null;foldSt={};wakeOff();save();renderWork();setClock(null);paintRest();
+      S.active=null;foldSt={};reorder=false;foldSnap=null;
+      document.body.classList.remove('reordermode');
+      wakeOff();save();renderWork();setClock(null);paintRest();
       toast('Тренировка отменена, изменения откачены');
     }
     else arm(b,'Точно отменить? Всё сотрётся');return;}
@@ -1952,11 +1986,12 @@ document.addEventListener('click',function(ev){
   if(a==='note'){openNote(b.closest('.ex').dataset.ex);return;}
   if(a==='nsave'){saveNote();return;}
   if(a==='undis'){S.dismissed={};save();renderWork();window.scrollTo(0,0);toast('Скрытые карточки возвращены');return;}
+  if(a==='rodone'){exitReorder();toast('Порядок сохранён');return;}
   if(a==='auto'){S.auto=!S.auto;save();renderWork();
     toast(S.auto?'Авто-ход включён: подходы на время и паузы между ними идут сами'
                 :'Авто-ход выключен: каждый подход запускаешь сам');return;}
   if(a==='advtog'){advOpen=!advOpen;if(!advOpen)advMarkSeen();renderWork();return;}
-  if(a==='fold'){var fx=b.closest('.ex').dataset.ex;
+  if(a==='fold'){if(reorder)return;var fx=b.closest('.ex').dataset.ex;
     foldSt[fx]=b.classList.contains('exfold')?'open':'fold';renderWork();return;}
   if(a==='set+'||a==='set-'){
     var host=b.closest('.ex'),itemId=host.dataset.item;
@@ -2118,7 +2153,7 @@ function startDay(k){
   if(k==='padel'){openPadel();return;}
   /* начал тренироваться — значит разбор прочитан */
   advMarkSeen();advOpen=false;
-  stopRest();stopSetTimer(true);foldSt={};
+  stopRest();stopSetTimer(true);foldSt={};reorder=false;foldSnap=null;
   /* Снимок изменяемых настроек: отмена тренировки должна откатывать и число
      подходов, и правки примечаний, а не только записанные подходы. */
   S.active={day:k,type:DAYS[k].type,s:Date.now(),pAcc:0,e:{},w:{},swap:{},
@@ -2167,7 +2202,7 @@ function doFinish(){
               swap:(a.swap&&Object.keys(a.swap).length)?a.swap:undefined});
   /* план недели фиксируется здесь: дальше его правка эту неделю не тронет */
   freezePlan(weekKey(a.s));
-  stopRest();stopSetTimer(true);S.active=null;foldSt={};wakeOff();
+  stopRest();stopSetTimer(true);S.active=null;foldSt={};reorder=false;foldSnap=null;document.body.classList.remove('reordermode');wakeOff();
   save();closeModal();renderWork();setClock(null);paintRest();
   var l=S.log[S.log.length-1];
   toast('Записано: '+countSets(l)+' подходов, '+mins+' мин · '+kcalOf(l)+' ккал');
@@ -2228,17 +2263,31 @@ function saveNote(){
   save();closeModal();renderWork();toast(val?'Примечание сохранено':'Примечание удалено');
 }
 
+/* Был ли этот подход рекордом на тот момент: сравниваем с лучшим из всех
+   тренировок ДО него, а не со всей историей — иначе рекорд «пропадал» задним
+   числом, стоило побить его позже. */
+function wasPR(logIdx,exId){
+  var m=EX[exId];if(!m)return false;
+  var cur=exScore(S.log[logIdx].e[exId],m);
+  if(!cur)return false;
+  var best=0;
+  for(var i=0;i<logIdx;i++){var q=exScore((S.log[i].e||{})[exId],m);if(q>best)best=q;}
+  return best>0&&cur>best+0.01;
+}
 function openEdit(i){
   var x=S.log[i];if(!x)return;
   var d=DAYS[x.day]||{t:x.day,ex:[]};
   var mins=Math.max(1,Math.round((x.f-x.s)/60000));
   var lines=[];
+  var prs=0;
   Object.keys(x.e).forEach(function(k){
     var m=EX[k];if(!m)return;
     var txt=x.e[k].map(function(s){return m.noW?s.r:fmtW(s.w)+'×'+s.r;}).join('  ');
-    lines.push('<li><b>'+x.e[k].length+'</b><span>'+m.name+'<br><span style="color:var(--mut);font-family:IBM Plex Mono,monospace;font-size:12.5px">'+txt+'</span></span></li>');
+    var pr=wasPR(i,k);if(pr)prs++;
+    lines.push('<li><b>'+x.e[k].length+'</b><span>'+m.name+(pr?'<span class="pr">Рекорд</span>':'')+
+      '<br><span style="color:var(--mut);font-family:IBM Plex Mono,monospace;font-size:12.5px">'+txt+'</span></span></li>');
   });
-  openModal('<h3>Правка тренировки</h3><p class="sub">'+d.t+' · '+dwd(x.s)+'</p>'+
+  openModal('<h3>Правка тренировки</h3><p class="sub">'+d.t+' · '+dwd(x.s)+(prs?' · рекордов: '+prs:'')+'</p>'+
     '<ul class="done-list">'+lines.join('')+'</ul>'+
     '<label class="mlab">Длительность, мин</label>'+
     '<input type="text" inputmode="numeric" class="txt" id="emins" value="'+mins+'">'+
