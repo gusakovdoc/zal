@@ -834,6 +834,10 @@ function exScore(sets,m){
   });
   return n?s/n:0;
 }
+/* Рекорд — это ПРЕВЗОЙТИ прошлый лучший результат, а не повторить его.
+   Порог в сотую нужен только против ошибок округления: реальная прибавка
+   даже в один повтор даёт куда больше. */
+function isRecord(cur,best){return cur>0&&best>0&&cur>best+0.01;}
 function bestEver(exId){
   var m=EX[exId];if(!m)return 0;
   var b=0;
@@ -1793,7 +1797,7 @@ function renderWork(){
        Подсказка о прибавке веса выносится в свёрнутую строку, иначе она
        появлялась бы ровно в момент сворачивания и оставалась незамеченной. */
     var cur1=exScore(sArr,m),rec=bestEver(exId);
-    var isPR=doneN>=nSets&&cur1>0&&rec>0&&cur1>=rec-0.01;
+    var isPR=doneN>=nSets&&isRecord(cur1,rec);
     var prBadge=isPR?'<span class="pr">Рекорд</span>':'';
     var lastSet=sArr[nSets-1];
     var rirSet=(m.unit==='сек')||!!(lastSet&&lastSet.q!==undefined&&lastSet.q!==null);
@@ -2096,7 +2100,7 @@ document.addEventListener('click',function(ev){
       var doneNow=arr.filter(function(x){return x&&x.d;}).length;
       if(need&&doneNow>=need){
         var before=bestEver(exId2),now=exScore(arr,m);
-        if(now>0&&before>0&&now>before+0.5)
+        if(isRecord(now,before))
           setTimeout(function(){toast('Рекорд! Средний 1ПМ за подходы: '+Math.round(now)+' кг',1);},80);
       }
     }
@@ -2272,7 +2276,7 @@ function wasPR(logIdx,exId){
   if(!cur)return false;
   var best=0;
   for(var i=0;i<logIdx;i++){var q=exScore((S.log[i].e||{})[exId],m);if(q>best)best=q;}
-  return best>0&&cur>best+0.01;
+  return isRecord(cur,best);
 }
 function openEdit(i){
   var x=S.log[i];if(!x)return;
