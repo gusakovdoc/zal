@@ -284,7 +284,8 @@ button.exh .foldi{align-self:flex-start;padding-top:3px}
 
 /* выбор недели в календаре */
 .calrow.sel{background:rgba(104,172,236,.13);border-radius:var(--r-x)}
-.wst{cursor:pointer}
+.calrow[data-a]{cursor:pointer;border-radius:var(--r-x)}
+.calrow[data-a]:active{background:rgba(104,172,236,.2)}
 .wbox{background:var(--card);border:1px solid rgba(104,172,236,.45);border-radius:var(--r);padding:14px 15px;margin-bottom:12px;box-shadow:var(--sh),var(--edge)}
 .wbox h5{font-family:"Barlow Condensed",sans-serif;font-weight:700;font-size:19px;margin:0 0 9px;color:var(--dat)}
 .kv{display:flex;justify-content:space-between;gap:10px;padding:5px 0;border-bottom:1px solid var(--line);font-size:14px}
@@ -300,6 +301,12 @@ button.exh .foldi{align-self:flex-start;padding-top:3px}
 .macro b{display:block;font-family:"IBM Plex Mono",monospace;font-weight:600;font-size:19px;color:var(--dat);letter-spacing:-.02em}
 .macro span{font-size:11.5px;color:var(--mut)}
 .tgtbig{font-family:"IBM Plex Mono",monospace;font-weight:600;font-size:40px;color:var(--ok);line-height:1;letter-spacing:-.03em;text-shadow:0 0 30px rgba(85,188,138,.35)}
+/* факт рядом с планом: тон приглушён, чтобы план оставался главной цифрой */
+.macro i,.tgtfact{display:block;font-style:normal;font-family:"IBM Plex Mono",monospace;font-size:11.5px}
+.macro i{margin-top:5px;padding-top:5px;border-top:1px solid var(--line)}
+.tgtfact{margin-top:6px;font-size:12.5px;color:var(--mut)}
+.tgtfact i{display:inline;font-size:inherit}
+.fhit{color:var(--ok)} .foff{color:var(--warn)} .fnof{color:var(--dim)}
 
 /* смахиваемые карточки: горизонталь перехватываем, вертикальную прокрутку оставляем */
 [data-tip]{touch-action:pan-y}
@@ -931,6 +938,16 @@ function bodyAt(wk,key){
               .sort(function(a,b){return a.d<b.d?-1:1;});
   return r.length?r[r.length-1][key]:null;
 }
+/* То же самое, но строго ИЗ этой недели. bodyAt отдаёт последний известный
+   замер, и для сравнения «план против факта» этого мало: недели без замера
+   показали бы чужие цифры, ничем не отличимые от своих. */
+function bodyIn(wk,key){
+  var end=wk+7*864e5;
+  var r=S.body.filter(function(x){var t=new Date(x.d).getTime();
+      return t>=wk&&t<end&&x[key]!==undefined&&x[key]!=='';})
+    .sort(function(a,b){return a.d<b.d?-1:1;});
+  return r.length?+r[r.length-1][key]:null;
+}
 /* ---- Питание ----
    Режим набора. Быстрый набор действительно уводит часть прироста в жир, но
    у того, кому вес даётся тяжело, слишком осторожный избыток просто не даёт
@@ -1133,26 +1150,30 @@ function hintsHtml(){
   var d=daysSince();
 
   var P=planFor(wk);
+
+  /* 1. Совет дня — первым. Остальные карточки условные и всплывают редко,
+     а эта есть каждый день, и в конце списка её приходилось искать.
+     Меняется раз в сутки, смахнутый вернётся завтра. */
+  var fday=Math.floor(Date.now()/864e5);
+  out+=card('fact',fday,'<div class="tip fact"><b>Совет дня</b>'+FACTS[fday%FACTS.length]+'</div>');
+
   if(S.bad[wk]) out+=card('bad',wk,'<div class="tip todo"><b>Неделя объявлена трудной.</b> План урезан до минимума, который удерживает результат: зал 1, мобильность 2, кор 1, локоть 5. Снять — на вкладке «Итоги».</div>');
 
-  /* 1. Статус недели */
+  /* 2. Статус недели.
+     Счётчиков «осталось столько-то» здесь больше нет: сколько сделано и
+     сколько нужно, видно на кнопках дней и в «Итогах», а карточка повторяла
+     это каждый день и вытесняла то, что говорится один раз. Осталось только
+     закрытие недели — это событие, а не напоминание. */
   var gd=planDone('gym',wk),gn=P.gym;
-  if(gd>=gn&&gn>0){
+  if(gd>=gn&&gn>0)
     out+=card('gym',wk+':'+gd+'/'+gn,'<div class="tip good"><b>Зал на неделе закрыт: '+gd+' из '+gn+'.</b> Дальше решают еда и сон, а не дополнительные подходы.</div>');
-  }else{
-    var need=gn-gd;
-    var nextDay=(!S.log.filter(function(x){return weekKey(x.s)===wk&&x.day==='A';}).length)?'A':'B';
-    out+=card('gym',wk+':'+gd+'/'+gn,'<div class="tip todo"><b>Зал: '+gd+' из '+gn+'.</b> Осталось '+need+' — начни с дня '+nextDay+'. Между залами нужно минимум два дня.</div>');
-  }
 
-  /* 2. Домашние блоки */
-  var miss=[];
-  [['mob','мобильность'],['core','кор'],['wheel','пресс'],['prio','приоритет'],['elbow','локоть']].forEach(function(p){
-    var done=planDone(p[0],wk),need2=P[p[0]];
-    if(need2>0&&done<need2)miss.push(p[1]+' '+done+'/'+need2);
+  var miss=0;
+  [['mob'],['core'],['wheel'],['prio'],['elbow']].forEach(function(p){
+    if(P[p[0]]>0&&planDone(p[0],wk)<P[p[0]])miss++;
   });
-  if(miss.length) out+=card('home',wk+':'+miss.join(','),'<div class="tip"><b>Дома осталось:</b> '+miss.join(', ')+'. Мобильность и кор важнее приоритета — они работают на спину.</div>');
-  else if(S.log.filter(function(x){return weekKey(x.s)===wk;}).length) out+=card('home',wk+':all','<div class="tip good"><b>Домашние блоки на неделе выполнены полностью.</b></div>');
+  if(!miss&&S.log.filter(function(x){return weekKey(x.s)===wk;}).length)
+    out+=card('home',wk+':all','<div class="tip good"><b>Домашние блоки на неделе выполнены полностью.</b></div>');
 
   /* 2б. Застой */
   var stuck=[];
@@ -1168,7 +1189,6 @@ function hintsHtml(){
   /* 3. Пауза */
   if(d===null) out+=card('pause','first','<div class="tip">Первая тренировка. Веса подставлены расчётные — первым подходом откалибруй под себя.</div>');
   else if(d>=5) out+=card('pause','off'+d,'<div class="tip todo"><b>Без зала '+d+' дн.</b> Возвращайся с весами на 5–10% ниже последних, за две тренировки догонишь. Начинать заново не нужно.</div>');
-  else if(d===0) out+=card('pause','today'+iso(Date.now()),'<div class="tip">Сегодня тренировка уже была. Если это второй заход — лучше ограничься мобильностью.</div>');
 
   /* 4. Замеры */
   var lastB=S.body.slice().sort(function(a,b){return a.d<b.d?-1:1;}).slice(-1)[0];
@@ -1183,9 +1203,6 @@ function hintsHtml(){
       out+=card('backup',since===null?'never':Math.floor(since/30),'<div class="tip todo"><b>'+(since===null?'Копия данных ещё ни разу не делалась.':'Последняя копия '+since+' дн. назад.')+'</b> Данные живут только в этом браузере. Настрой синхронизацию с GitHub во вкладке «Итоги» — дальше всё пойдёт само.</div>');
   }
 
-  /* 5. Совет дня — меняется раз в сутки, смахнутый вернётся завтра */
-  var fday=Math.floor(Date.now()/864e5);
-  out+=card('fact',fday,'<div class="tip fact"><b>Совет дня</b>'+FACTS[fday%FACTS.length]+'</div>');
   out+='</div>';
   /* hidCount посчитан всеми вызовами card() выше — это ровно то,
      что скрыто прямо сейчас, а не всё когда-либо смахнутое */
@@ -1982,7 +1999,11 @@ document.addEventListener('click',function(ev){
   if((Date.now()-swipeAt<400||Date.now()-dragAt<250)&&ev.target.closest('.ex,[data-tip]'))return;
   var ed=ev.target.closest('[data-edit]');
   if(ed&&!ev.target.closest('button')){openEdit(+ed.dataset.edit);return;}
-  var b=ev.target.closest('button');
+  /* Обычно действие висит на кнопке, но строка недели в календаре — сетка
+     ячеек, и кнопкой её не сделать: div внутри button недопустим. Поэтому
+     принимаем любой элемент с data-a. Кнопка внутри такого элемента всё
+     равно ближе, и closest вернёт её. */
+  var b=ev.target.closest('button,[data-a]');
   if(!b){disarm();return;}
   if(armed&&armed.el!==b)disarm();
   if(b.dataset.start){startDay(b.dataset.start);return;}
@@ -2592,14 +2613,16 @@ function renderStat(){
     }
     var wk=weekKey(rowStart.getTime()),stt=weekStatus(wk);
     var lbl={g:'✓',y:'~',r:'✕',n:'·'}[stt];
-    cells+='<button class="wst '+stt+'" data-a="wsel" data-w="'+wk+'">'+lbl+'</button>';
-    h+='<div class="calrow'+(statWk===wk?' sel':'')+'">'+cells+'</div>';
+    cells+='<span class="wst '+stt+'">'+lbl+'</span>';
+    /* Нажатие ловит вся строка, а не значок справа: попасть пальцем в 26 px
+       на телефоне тяжело, а вся ширина строки и так ничем не занята. */
+    h+='<div class="calrow'+(statWk===wk?' sel':'')+'" data-a="wsel" data-w="'+wk+'">'+cells+'</div>';
     if(cur.getMonth()!==mm&&wRow>=3)break;
   }
   h+='<div class="leg"><span><i style="background:var(--ok)"></i>зал</span><span><i style="background:var(--dat)"></i>дома</span>'+
      '<span><i style="background:var(--ok)"></i>неделя по плану</span><span><i style="background:var(--warn)"></i>пропущено дома</span>'+
      '<span><i style="background:var(--stop)"></i>пропущен зал</span></div>'+
-     '<p class="note-s">Нажми на значок недели справа — ниже раскроется расход калорий за неё.</p></div>';
+     '<p class="note-s">Нажми на строку недели в любом месте — ниже раскроется расход калорий за неё, а «Питание» пересчитается на эту неделю.</p></div>';
 
   /* ---- выбранная неделя: расход калорий ---- */
   if(statWk!==null){
@@ -2635,11 +2658,30 @@ function renderStat(){
 
   /* ---- питание: главные цифры видны, расчёт под спойлером ---- */
   var nWk=statWk!==null?statWk:tw,N=nutrition(nWk);
-  h+='<h4>Питание</h4><p class="sub">Норма на день для недели с '+dstr(nWk)+'. Считается от твоего веса, шагов и реального расхода на тренировки.</p>';
+  /* Факт — из замера ЭТОЙ недели. Макросы вписываются суммой за семь дней,
+     калории уже средним за день, поэтому делится только первое. */
+  var fKc=bodyIn(nWk,'kc'),f7=function(k){var v=bodyIn(nWk,k);return v===null?null:Math.round(v/7);};
+  var fPr=f7('pr'),fFt=f7('ft'),fCb=f7('cb');
+  var hasFact=(fKc!==null||fPr!==null||fFt!==null||fCb!==null);
+  /* Отклонение больше десятой части плана — уже не округление дневника,
+     а другое питание; знак не оцениваем: и недобор, и перебор одинаково
+     означают, что план на неделе не выполнен. */
+  function fct(plan,fact){
+    if(!hasFact)return '';
+    if(fact===null)return '<i class="fnof">факт не записан</i>';
+    var d=Math.round(fact-plan);
+    return '<i class="'+(plan&&Math.abs(d)>plan*0.1?'foff':'fhit')+'">'+fact+(d?' · '+(d>0?'+':'')+d:' · в план')+'</i>';
+  }
+  h+='<h4>Питание</h4><p class="sub">Норма на день для недели с '+dstr(nWk)+'. Считается от твоего веса, шагов и реального расхода на тренировки.'+
+     (hasFact?' Мелким шрифтом — что вышло по факту за эту неделю и насколько это разошлось с планом.':'')+'</p>';
   h+='<div class="wbox"><div style="text-align:center;margin-bottom:12px">'+
-     '<span class="tgtbig">'+N.target+'</span><div style="font-size:13px;color:var(--mut)">ккал в день, чтобы набирать</div></div>'+
-     '<div class="macro"><div><b>'+N.prot+'</b><span>белок, г</span></div>'+
-     '<div><b>'+N.fat+'</b><span>жиры, г</span></div><div><b>'+N.carb+'</b><span>углеводы, г</span></div></div></div>';
+     '<span class="tgtbig">'+N.target+'</span><div style="font-size:13px;color:var(--mut)">ккал в день, чтобы набирать</div>'+
+     (hasFact?'<div class="tgtfact">'+(fKc===null?'<i class="fnof">калории за неделю не записаны</i>'
+        :'по факту <i class="'+(Math.abs(fKc-N.target)>N.target*0.1?'foff':'fhit')+'">'+fKc+
+          ' · '+(fKc-N.target>0?'+':'')+(fKc-N.target)+'</i>')+'</div>':'')+'</div>'+
+     '<div class="macro"><div><b>'+N.prot+'</b><span>белок, г</span>'+fct(N.prot,fPr)+'</div>'+
+     '<div><b>'+N.fat+'</b><span>жиры, г</span>'+fct(N.fat,fFt)+'</div>'+
+     '<div><b>'+N.carb+'</b><span>углеводы, г</span>'+fct(N.carb,fCb)+'</div></div></div>';
   var nb='<div class="wbox">';
   nb+='<label class="mlab">Режим набора</label><select id="gsel">';
   Object.keys(GAIN).forEach(function(k){
