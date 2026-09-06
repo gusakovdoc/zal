@@ -1712,6 +1712,10 @@ function autoNextSet(exId,kind,idx){
 }
 function startSetTimer(exId,kind,idx,sec,btn,row,noPrep){
   stopSetTimer(true);
+  /* Цифры из полей фиксируем на старте. Запись в памяти появляется только
+     от правки кнопками, а в авто-ходе строку никто не трогает — вес с экрана
+     уходил в ноль у всех сторон, кроме первой. */
+  commit(exId,kind,idx,row);
   /* новый подход начался — отдых больше не идёт, иначе его сигнал
      сработает посреди упражнения */
   stopRest();paintRest();
@@ -1932,9 +1936,11 @@ function renderWork(){
            веса — только первая прикидка: реально её один раз подгоняют под
            снаряд (гриф, ближайшие блины, шаг стека) и дальше не трогают, а
            пересчёт от каждого нового рабочего веса эту подгонку стирал. */
+        var cw=cust.wu&&cust.wu[j];
         var wv=(st.w!==undefined&&st.w!==null)?st.w
+              :(cw!==undefined&&cw!==null?cw
               :((prevW&&prevW[j]&&prevW[j].w)?prevW[j].w
-              :(m.bw?0:roundTo(base*w.p,m.step,m.min)));
+              :(m.bw?0:roundTo(base*w.p,m.step,m.min))));
         var rv=(st.r!==undefined&&st.r!==null)?st.r:w.r;
         out+=setRow(m,'w',j,wv,rv,!!st.d,null,false,null);
       });
@@ -1943,7 +1949,11 @@ function renderWork(){
     for(var j=0;j<nSets;j++){
       var st2=sArr[j]||{};
       var pv2=prevS&&prevS[j]?prevS[j]:null;
-      var wv2=(st2.w!==undefined&&st2.w!==null)?st2.w:(pv2?pv2.w:(m.bw||m.noW?0:m.start));
+      /* Ноль у прошлого подхода с внешним весом — не вес, а дыра в записи
+         (так уходили в ноль стороны фермера). Подставляем вес первого
+         подхода, иначе дыра переписывается из тренировки в тренировку. */
+      var pw2=(pv2&&(pv2.w>0||m.bw||m.noW))?pv2.w:base;
+      var wv2=(st2.w!==undefined&&st2.w!==null)?st2.w:(pv2?pw2:(m.bw||m.noW?0:m.start));
       var rv2=(st2.r!==undefined&&st2.r!==null)?st2.r:(pv2?pv2.r:(m.repdef||item.rd));
       out+=setRow(m,'s',j,wv2,rv2,!!st2.d,pv2,!!st2.warn,st2.q);
     }
@@ -2183,6 +2193,7 @@ document.addEventListener('click',function(ev){
       if(wv>400||rv>120)warn=true;
     }
     arr[idx]={w:wv,r:rv,d:nd,warn:warn,q:cur.q};
+    if(kind==='w')rememberWu(exId2,idx,wv);
     if(nd)S.active.lastEx=exId2;
 
     /* Рекорд проверяем только когда упражнение закрыто целиком: среднее по
@@ -2249,7 +2260,17 @@ function commit(exId,kind,idx,row){
   var arr=bank[exId]=bank[exId]||[];
   var cur=arr[idx]||{},wq=row.querySelector('[data-f="w"]');
   arr[idx]={w:wq?num(wq.value):0,r:num(row.querySelector('[data-f="r"]').value),d:!!cur.d,warn:!!cur.warn,q:cur.q};
+  if(kind==='w')rememberWu(exId,idx,arr[idx].w);
   save();
+}
+/* Разминочный вес — настройка упражнения, а не запись в логе: его подгоняют
+   под снаряд один раз и дальше не трогают. В лог попадали только разминки
+   с галочкой, а её ставят не всегда, и вес на следующей тренировке снова
+   пересчитывался от доли. Живёт в S.custom, поэтому отмена тренировки
+   откатывает и его. */
+function rememberWu(exId,idx,w){
+  var c=S.custom[exId]=S.custom[exId]||{};
+  c.wu=c.wu||[];c.wu[idx]=w;
 }
 function countActive(){var n=0;Object.keys(S.active.e).forEach(function(k){S.active.e[k].forEach(function(s){if(s&&s.d)n++;});});return n;}
 function startDay(k){
