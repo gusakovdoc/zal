@@ -780,13 +780,13 @@ var PLAN0={gym:2,mob:5,core:3,wheel:2,prio:2,elbow:5};
 /* Урезанная неделя: минимум, который удерживает результат, когда всё пошло не так */
 var PLANMIN={gym:1,mob:2,core:1,wheel:0,prio:0,elbow:5};
 var S={active:null,log:[],body:[],custom:{},setsOv:{},plan:copy(PLAN0),
-       planHist:{},bad:{},sync:{tok:'',repo:'',path:'data.json',at:0,err:''},backupAt:0,
+       planHist:{},bad:{},deload:{},sync:{tok:'',repo:'',path:'data.json',at:0,err:''},backupAt:0,
        gain:'hard',advice:null,advSeen:'',dismissed:{},weekOk:{},auto:true,vol:1,vibe:true,order:{}};
 var tick=null,calM=null,statWk=null;
 function copy(o){var r={};Object.keys(o).forEach(function(k){r[k]=o[k];});return r;}
 
 function save(){store.set('gym:v2',{active:S.active,log:S.log,body:S.body,custom:S.custom,setsOv:S.setsOv,
-  plan:S.plan,planHist:S.planHist,bad:S.bad,sync:S.sync,backupAt:S.backupAt,
+  plan:S.plan,planHist:S.planHist,bad:S.bad,deload:S.deload,sync:S.sync,backupAt:S.backupAt,
   gain:S.gain,advice:S.advice,advSeen:S.advSeen,dismissed:S.dismissed,weekOk:S.weekOk,auto:S.auto,vol:S.vol,vibe:S.vibe,order:S.order});}
 function toast(m,pr){
   var t=document.getElementById('toast');
@@ -824,6 +824,8 @@ function bodyW(){
 }
 function setsOf(dayKey,item){
   var n=S.setsOv[item.id]||item.sets,m=EX[exIdFor(item,dayKey)];
+  /* разгрузка режет подходы вдвое, округляя вверх: из трёх — два, из двух — один */
+  if(dlActive(dayKey))n=Math.max(1,Math.ceil(n/2));
   /* Подход здесь — одна сторона, поэтому их число всегда чётное: при нечётном
      вторая сторона осталась бы недоделанной, а в подписях висело бы A, Б, A. */
   if(m&&m.side&&n%2)n++;
@@ -845,8 +847,30 @@ function setScore(w,r,m){
    восстановление локтя, где гнаться за весом прямо противопоказано. */
 function hasE1(m){return !!m&&!m.noE1&&!m.noW&&m.unit!=='сек';}
 function e1rm(w,r,m){return hasE1(m)?setScore(w,r,m):0;}
+/* ---- Разгрузочная неделя ----
+   Отметка ставится на НЕДЕЛЮ, а не пишется в каждую тренировку: так её можно
+   поставить задним числом или снять, и все расчёты сразу согласятся.
+   Тренировки разгрузки лежат в логе как обычные, но в расчёт прогресса не
+   идут: ни в «прошлый раз», ни в рекорды, ни в графики, ни в застой. Иначе
+   урезанные подходы легли бы провалом на график, а на следующей неделе
+   приложение подставило бы половинчатые цифры вместо настоящих.
+   Касается только силовой работы: мобильность и локоть — и так восстановление,
+   урезать там нечего, и их прогресс должен идти дальше. */
+var DL_DAYS={A:1,B:1,prio:1,core:1,wheel:1};
+function isDlWeek(wk){return !!S.deload[wk];}
+function isDl(x){return !!x&&!!DL_DAYS[x.day]&&isDlWeek(weekKey(x.s));}
+/* Идущая тренировка судится по своему старту, а не по «сейчас»: начатая в
+   воскресенье разгрузки и законченная в понедельник остаётся разгрузкой. */
+function dlActive(dayKey){
+  if(!DL_DAYS[dayKey])return false;
+  var t=(S.active&&S.active.day===dayKey)?S.active.s:Date.now();
+  return isDlWeek(weekKey(t));
+}
 function lastDone(exId,key){
-  for(var i=S.log.length-1;i>=0;i--){var e=(S.log[i][key]||{})[exId];if(e&&e.length)return e;}
+  for(var i=S.log.length-1;i>=0;i--){
+    if(isDl(S.log[i]))continue;
+    var e=(S.log[i][key]||{})[exId];if(e&&e.length)return e;
+  }
   return null;
 }
 /* Оценка упражнения за тренировку — среднее по рабочим подходам, а не лучший
@@ -869,7 +893,7 @@ function isRecord(cur,best){return cur>0&&best>0&&cur>best+0.01;}
 function bestEver(exId){
   var m=EX[exId];if(!m)return 0;
   var b=0;
-  S.log.forEach(function(x){var q=exScore(x.e[exId],m);if(q>b)b=q;});
+  S.log.forEach(function(x){if(isDl(x))return;var q=exScore(x.e[exId],m);if(q>b)b=q;});
   return b;
 }
 
@@ -1095,6 +1119,7 @@ function plateau(exId){
   var m=EX[exId];if(!m||!hasE1(m))return 0;
   var by={};
   S.log.forEach(function(x){
+    if(isDl(x))return;
     var e=x.e[exId];if(!e||!e.length)return;
     var wk=weekKey(x.s),b=0;
     e.forEach(function(s){var q=e1rm(s.w,s.r,m);if(q>b)b=q;});
@@ -1162,6 +1187,7 @@ function hintsHtml(){
   var fday=Math.floor(Date.now()/864e5);
   out+=card('fact',fday,'<div class="tip fact"><b>Совет дня</b>'+FACTS[fday%FACTS.length]+'</div>');
 
+  if(S.deload[wk]) out+=card('dl',wk,'<div class="tip todo"><b>Разгрузочная неделя.</b> В зале, приоритете, коре и прессе подходов вдвое меньше, вес прежний, повторы урезаны на треть. Мобильность и локоть — как обычно. В графики и рекорды неделя не идёт.</div>');
   if(S.bad[wk]) out+=card('bad',wk,'<div class="tip todo"><b>Неделя объявлена трудной.</b> План урезан до минимума, который удерживает результат: зал 1, мобильность 2, кор 1, локоть 5. Снять — на вкладке «Итоги».</div>');
 
   /* 2. Статус недели.
@@ -1846,12 +1872,24 @@ function renderWork(){
     h+='<button data-start="padel"><span class="dn fr'+(pd?' ok':'')+'">'+pd+'</span><span class="dd"><b>Падел</b>'+
        '<span>Записать игру: время и калории с пульсометра</span>'+
        '<em>'+(lp?'Последний раз: '+dwd(lp.s):'Ещё не записан')+'</em></span></button></div>';
+    /* Переключатель здесь, а не в «Итогах»: решают о разгрузке перед
+       тренировкой, и искать его по вкладкам в этот момент некогда. */
+    var dlw=isDlWeek(wk);
+    h+='<div class="btns" style="margin:4px 0 16px"><button class="sm" data-a="deload">'+
+       (dlw?'Снять разгрузку с этой недели':'Сделать неделю разгрузочной')+'</button></div>';
     v.innerHTML=h;setClock(null);return;
   }
 
   var day=DAYS[S.active.day];
-  sub.textContent=day.t+' · идёт';
+  var dlOn=dlActive(S.active.day);
+  sub.textContent=day.t+(dlOn?' · разгрузка':' · идёт');
   var out='';
+  /* Одна плашка на всю тренировку вместо строки в каждой карточке: правило
+     разгрузки одно для всех упражнений, повторять его девять раз незачем. */
+  if(dlOn&&!reorder)
+    out+='<div class="tips"><div class="tip todo"><b>Разгрузка.</b> Вес — как в прошлый раз, подходов вдвое меньше, '+
+         'повторы уже урезаны на треть: останавливайся за 3–4 до отказа. В прогресс и рекорды эта тренировка не идёт, '+
+         'а на следующей неделе подставятся цифры до разгрузки.</div></div>';
   document.body.classList.toggle('reordermode',reorder);
   if(reorder)
     out+='<div class="robar"><b>Перетащи упражнения в нужном порядке</b>'+
@@ -1874,7 +1912,7 @@ function renderWork(){
        Подсказка о прибавке веса выносится в свёрнутую строку, иначе она
        появлялась бы ровно в момент сворачивания и оставалась незамеченной. */
     var cur1=exScore(sArr,m),rec=bestEver(exId);
-    var isPR=doneN>=nSets&&isRecord(cur1,rec);
+    var isPR=!dlOn&&doneN>=nSets&&isRecord(cur1,rec);
     var prBadge=isPR?'<span class="pr">Рекорд</span>':'';
     var lastSet=sArr[nSets-1];
     var rirSet=(m.unit==='сек')||!!(lastSet&&lastSet.q!==undefined&&lastSet.q!==null);
@@ -1882,7 +1920,7 @@ function renderWork(){
     if(fs==='fold'||(fs!=='open'&&autoFold)){
       var sum=sArr.filter(function(s){return s&&s.d;}).map(function(s){
         return m.noW?String(s.r):fmtW(s.w)+'×'+s.r;}).join('  ');
-      var fh=progHint(item,m,sArr,nSets);
+      var fh=dlOn?'':progHint(item,m,sArr,nSets);
       out+='<article class="ex'+(doneN>=nSets?' done':'')+'"'+tag+'>'+
         '<button class="exfold" data-a="fold"><span class="exn">'+(i+1)+'</span>'+
         '<span class="ext"><h3>'+m.name+prBadge+'</h3><span class="fsum">'+sum+'</span>'+
@@ -1912,7 +1950,9 @@ function renderWork(){
         ?'Средний 1ПМ за подходы: '+Math.round(cur1)+' кг'+e1n+(rec>0?'  ·  рекорд '+Math.round(rec)+' кг':'')
         :'Рекорд: '+Math.round(rec)+' кг'+e1n)+'</div>';
     }
-    var ad=S.advice&&S.advice.ex&&S.advice.ex[exId];
+    /* Совет, прибавка и застой на разгрузке молчат: все они про то, как
+       расти дальше, а неделя как раз про то, чтобы не расти. */
+    var ad=!dlOn&&S.advice&&S.advice.ex&&S.advice.ex[exId];
     if(ad){
       var bits=[];
       if(ad.w!==undefined&&ad.w!==null)bits.push('<span class="n">'+fmtW(ad.w)+' кг</span>');
@@ -1921,9 +1961,9 @@ function renderWork(){
       out+='<div class="advline"><span class="advtag">CLAUDE</span> '+
            (bits.length?bits.join(' · ')+'. ':'')+esc(ad.b||'')+'</div>';
     }
-    var ph=progHint(item,m,sArr,nSets);
+    var ph=dlOn?'':progHint(item,m,sArr,nSets);
     if(ph) out+='<div class="phint">'+ph+'</div>';
-    var pl=plateau(exId);
+    var pl=dlOn?0:plateau(exId);
     if(pl&&!ph) out+='<div class="pwarn">Лучший результат стоит '+pl+' нед. Смотри не на подходы, а на сон и добор калорий.</div>';
     if(cust.note) out+='<div class="mynote">'+esc(cust.note)+'</div>';
     out+='<div class="sets">';
@@ -1954,7 +1994,12 @@ function renderWork(){
          подхода, иначе дыра переписывается из тренировки в тренировку. */
       var pw2=(pv2&&(pv2.w>0||m.bw||m.noW))?pv2.w:base;
       var wv2=(st2.w!==undefined&&st2.w!==null)?st2.w:(pv2?pw2:(m.bw||m.noW?0:m.start));
-      var rv2=(st2.r!==undefined&&st2.r!==null)?st2.r:(pv2?pv2.r:(m.repdef||item.rd));
+      /* На разгрузке повторы подставляются уже урезанными на треть — это и
+         есть запас 3–4 до отказа, и отмечать подход можно одним тапом. Подходы
+         на время и без веса не режем: там нет отказа, от которого отступать. */
+      var rd2=pv2?pv2.r:(m.repdef||item.rd);
+      if(dlOn&&pv2&&m.unit!=='сек'&&!m.noW)rd2=Math.max(1,Math.round(pv2.r*0.67));
+      var rv2=(st2.r!==undefined&&st2.r!==null)?st2.r:rd2;
       out+=setRow(m,'s',j,wv2,rv2,!!st2.d,pv2,!!st2.warn,st2.q);
     }
     out+='<div class="setbtns"><button data-a="set+">+ подход</button><button data-a="set-">− подход</button>'+
@@ -2121,6 +2166,13 @@ document.addEventListener('click',function(ev){
   if(a==='wsel'){var sw=+b.dataset.w;statWk=(statWk===sw)?null:sw;renderStat();return;}
   if(a==='okwk'){var ow=+b.dataset.w;if(S.weekOk[ow])delete S.weekOk[ow];else S.weekOk[ow]=1;
     save();cloudPush(true);renderStat();toast(S.weekOk[ow]?'Неделя зачтена как выполненная':'Зачёт снят');return;}
+  if(a==='deload'||a==='dlwk'){
+    var dw=a==='dlwk'?+b.dataset.w:weekKey(Date.now());
+    if(S.deload[dw])delete S.deload[dw];else S.deload[dw]=1;
+    save();cloudPush(true);
+    if(a==='dlwk')renderStat();else renderWork();
+    toast(S.deload[dw]?'Разгрузка: подходы вдвое, в прогресс не идёт':'Разгрузка снята — обычная неделя');
+    return;}
   if(a==='bad'){var bw=+b.dataset.w;if(S.bad[bw])delete S.bad[bw];else S.bad[bw]=1;save();renderStat();
     toast(S.bad[bw]?'Неделя отмечена трудной — план урезан':'Обычный план возвращён');return;}
   if(a==='sec'){var sk=b.dataset.s;openSec[sk]=!openSec[sk];renderStat();return;}
@@ -2198,7 +2250,7 @@ document.addEventListener('click',function(ev){
 
     /* Рекорд проверяем только когда упражнение закрыто целиком: среднее по
        подходам до последнего из них ещё ничего не значит. */
-    if(nd&&kind==='s'&&hasE1(m)){
+    if(nd&&kind==='s'&&hasE1(m)&&!dlActive(S.active.day)){
       var itm=planItemFor(exId2);
       var need=itm?setsOf(S.active.day,itm):0;
       var doneNow=arr.filter(function(x){return x&&x.d;}).length;
@@ -2392,10 +2444,11 @@ function saveNote(){
    числом, стоило побить его позже. */
 function wasPR(logIdx,exId){
   var m=EX[exId];if(!m)return false;
+  if(isDl(S.log[logIdx]))return false;
   var cur=exScore(S.log[logIdx].e[exId],m);
   if(!cur)return false;
   var best=0;
-  for(var i=0;i<logIdx;i++){var q=exScore((S.log[i].e||{})[exId],m);if(q>best)best=q;}
+  for(var i=0;i<logIdx;i++){if(isDl(S.log[i]))continue;var q=exScore((S.log[i].e||{})[exId],m);if(q>best)best=q;}
   return isRecord(cur,best);
 }
 function openEdit(i){
@@ -2461,6 +2514,7 @@ function groupWeek(wk){
 function strengthIndex(){
   var base={},pts=[],best={};
   S.log.forEach(function(sess){
+    if(isDl(sess))return;
     Object.keys(sess.e).forEach(function(k){
       var m=EX[k];if(!m||!IDX_EX[k])return;
       var b=0;sess.e[k].forEach(function(s){var q=setScore(s.w,s.r,m);if(q>b)b=q;});
@@ -2540,8 +2594,11 @@ function renderProg(){
   ids.forEach(function(id){h+='<option value="'+id+'"'+(id===progSel?' selected':'')+'>'+EX[id].name+'</option>';});
   h+='</select>';
   var m=EX[progSel],rows=[];
-  S.log.forEach(function(x,li){var e=x.e[progSel];if(e&&e.length){var b=null;e.forEach(function(s){if(!b||(m.noW||m.bw?s.r>b.r:s.w>b.w||(s.w===b.w&&s.r>b.r)))b=s;});rows.push({ts:x.s,sets:e,best:b,li:li});}});
-  if(!rows.length){h+='<p class="empty">По этому упражнению пока нет записей.</p>';v.innerHTML=h;bindSel();return;}
+  S.log.forEach(function(x,li){var e=x.e[progSel];if(e&&e.length){var b=null;e.forEach(function(s){if(!b||(m.noW||m.bw?s.r>b.r:s.w>b.w||(s.w===b.w&&s.r>b.r)))b=s;});rows.push({ts:x.s,sets:e,best:b,li:li,dl:isDl(x)});}});
+  /* в таблице разгрузка видна с пометкой, на графиках её нет: провал на
+     линии читался бы как регресс, которого не было */
+  var all=rows;rows=rows.filter(function(r){return !r.dl;});
+  if(!all.length){h+='<p class="empty">По этому упражнению пока нет записей.</p>';v.innerHTML=h;bindSel();return;}
   if(hasE1(m)){
     h+='<div class="chart"><h5>Расчётный 1ПМ, кг</h5>'+lineChart(rows.map(function(r){
       var b=0;r.sets.forEach(function(s){var q=e1rm(s.w,s.r,m);if(q>b)b=q;});return{x:dstr(r.ts),y:Math.round(b*10)/10};}),'#55BC8A','кг')+'</div>';
@@ -2552,10 +2609,11 @@ function renderProg(){
     h+='<div class="chart"><h5>Объём за тренировку, кг</h5>'+lineChart(rows.map(function(r){
       var mu=m.hand?2:1,t=0;r.sets.forEach(function(s){t+=(m.bw?bodyW()+s.w:s.w)*s.r*mu;});return{x:dstr(r.ts),y:Math.round(t)};}),'#68ACEC','кг')+'</div>';
   }
+  if(!rows.length)h+='<p class="empty">Пока есть только тренировки разгрузки — графиков по ним нет.</p>';
   h+='<h4>Последние тренировки</h4><p class="sub">Только рабочие подходы. Нажми на строку, чтобы поправить время, калории и заметку.</p><table><tr><th>Дата</th><th>Подходы</th></tr>';
-  rows.slice(-14).reverse().forEach(function(r){
+  all.slice(-14).reverse().forEach(function(r){
     var t=r.sets.map(function(s){return m.noW?s.r:((m.bw&&s.w>0?'+'+fmtW(s.w)+'×':m.bw?'':fmtW(s.w)+'×'))+s.r;}).join('   ');
-    h+='<tr data-edit="'+r.li+'" style="cursor:pointer"><td class="n">'+dwd(r.ts)+'</td><td class="n" style="color:var(--tx)">'+t+'</td></tr>';
+    h+='<tr data-edit="'+r.li+'" style="cursor:pointer"><td class="n">'+dwd(r.ts)+(r.dl?'<br><span style="color:var(--dim)">разгрузка</span>':'')+'</td><td class="n" style="color:var(--tx)">'+t+'</td></tr>';
   });
   h+='</table>';
   v.innerHTML=h;bindSel();
@@ -2715,7 +2773,8 @@ function renderStat(){
     var frozen=!!S.planHist[statWk],past=statWk<tw;
     wb+='<div class="btns" style="margin:12px 0 0">'+
         '<button class="sm" data-a="okwk" data-w="'+statWk+'">'+(S.weekOk[statWk]?'Снять зачёт':'Зачесть выполненной')+'</button>'+
-        '<button class="sm" data-a="bad" data-w="'+statWk+'">'+(S.bad[statWk]?'Снять «трудную»':'Отметить трудной')+'</button></div>';
+        '<button class="sm" data-a="bad" data-w="'+statWk+'">'+(S.bad[statWk]?'Снять «трудную»':'Отметить трудной')+'</button>'+
+        '<button class="sm" data-a="dlwk" data-w="'+statWk+'">'+(S.deload[statWk]?'Снять разгрузку':'Разгрузочная')+'</button></div>';
     wb+='<p class="note-s">'+
         (past?(frozen?'План этой недели закреплён: зал '+planFor(statWk).gym+', дома '+homeNeed(planFor(statWk))+'. Правка плана его больше не изменит.'
                      :'Неделя ещё не закреплена.')
@@ -3013,7 +3072,7 @@ function fixPlan(){Object.keys(PLAN0).forEach(function(k){if(S.plan[k]===undefin
 function applyDump(d){
   S.log=d.log||[];S.body=d.body||[];S.custom=d.custom||{};S.setsOv=d.setsOv||{};
   if(d.plan)S.plan=d.plan;
-  S.planHist=d.planHist||{};S.bad=d.bad||{};S.weekOk=d.weekOk||{};
+  S.planHist=d.planHist||{};S.bad=d.bad||{};S.weekOk=d.weekOk||{};S.deload=d.deload||{};
   if(d.order)S.order=d.order;
   if(d.gain&&GAIN[d.gain])S.gain=d.gain;
   fixPlan();backfillPlans();
@@ -3021,7 +3080,7 @@ function applyDump(d){
 /* Советы сюда не входят: они живут в отдельном advice.json, который приложение
    только читает. Токен не входит тем более. */
 function dump(){return JSON.stringify({v:3,log:S.log,body:S.body,custom:S.custom,setsOv:S.setsOv,
-  plan:S.plan,planHist:S.planHist,bad:S.bad,weekOk:S.weekOk,gain:S.gain,order:S.order});}
+  plan:S.plan,planHist:S.planHist,bad:S.bad,deload:S.deload,weekOk:S.weekOk,gain:S.gain,order:S.order});}
 function dl(name,text,mime){
   try{
     var b=new Blob([text],{type:mime||'application/json'}),u=URL.createObjectURL(b),a=document.createElement('a');
@@ -3066,7 +3125,7 @@ function doAi(){
     var m=EX[id],rr=[];
     S.log.forEach(function(x){
       var e=x.e[id];if(!e||!e.length)return;
-      rr.push(dstr(x.s)+': '+e.map(function(s){
+      rr.push(dstr(x.s)+(isDl(x)?' (разгрузка)':'')+': '+e.map(function(s){
         return (m.noW?String(s.r):fmtW(s.w)+'×'+s.r)+(s.q!==undefined&&s.q!==null?'@'+s.q:'');
       }).join(' '));
     });
@@ -3091,7 +3150,7 @@ function doAi(){
     var hm=ss.filter(function(y){return typeOf(y)==='home';}).length;
     var pd=ss.filter(function(y){return typeOf(y)==='padel';}).length;
     L.push('  с '+dstr(wk)+': зал '+g+', дома '+hm+', падел '+pd+', ккал '+weekKcal(wk)+
-           (S.bad[wk]?', ТРУДНАЯ НЕДЕЛЯ':'')+' — '+weekStatus(wk));
+           (S.bad[wk]?', ТРУДНАЯ НЕДЕЛЯ':'')+(S.deload[wk]?', РАЗГРУЗКА':'')+' — '+weekStatus(wk));
   });
   L.push('');
   var Nn=nutrition(weekKey(Date.now()));
@@ -3148,7 +3207,7 @@ store.get('gym:v2').then(function(d){
   S.active=d.active||null;S.log=d.log||[];S.body=d.body||[];
   S.custom=d.custom||{};S.setsOv=d.setsOv||{};
   if(d.plan)S.plan=d.plan;
-  S.planHist=d.planHist||{};S.bad=d.bad||{};S.weekOk=d.weekOk||{};
+  S.planHist=d.planHist||{};S.bad=d.bad||{};S.weekOk=d.weekOk||{};S.deload=d.deload||{};
   if(d.sync)S.sync=d.sync;
   S.backupAt=d.backupAt||0;
   if(d.gain&&GAIN[d.gain])S.gain=d.gain;
