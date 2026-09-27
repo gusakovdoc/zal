@@ -671,12 +671,14 @@ Object.keys(REST).forEach(function(k){
 
 /* ============ ТРЕНИРОВКИ ============ */
 var DAYS={
-A:{t:'День A',type:'gym',mins:80,ex:[
+/* Прогулку фермера убрали из плана 27.09: хват и кор и так закрыты
+   тягами и прессом, а девять минут в конце дня A шли в ущерб основному.
+   Описание упражнения в EX осталось — на нём висит история. */
+A:{t:'День A',type:'gym',mins:72,ex:[
  {id:'incline_db',sets:3,reps:'6–10',rd:8},{id:'cable_fly',sets:2,reps:'12–15',rd:13},
  {id:'bb_curl',sets:3,reps:'8–12',rd:10},{id:'pulldown',sets:3,reps:'8–12',rd:10},
  {id:'leg_press',sets:2,reps:'10–15',rd:12},{id:'db_ohp',sets:3,reps:'8–12',rd:10},
- {id:'tri_oh',sets:3,reps:'10–15',rd:12},{id:'lat_raise',sets:3,reps:'12–20',rd:15},
- {id:'farmer',sets:3,reps:'60 сек × сторона',rd:60}]},
+ {id:'tri_oh',sets:3,reps:'10–15',rd:12},{id:'lat_raise',sets:3,reps:'12–20',rd:15}]},
 B:{t:'День B',type:'gym',mins:85,ex:[
  {id:'bench',sets:3,reps:'5–8',rd:7},{id:'pullup',sets:3,reps:'макс / 8 / 8',rd:8},
  {id:'incline_curl',sets:3,reps:'8–12',rd:11},{id:'cable_fly',sets:3,reps:'12–15',rd:13},
@@ -1114,15 +1116,19 @@ function progHint(item,m,sArr,nSets){
   if(!ok)return '';
   return 'Все подходы на верхней границе: в следующий раз '+fmtW(w0)+' → '+fmtW(roundTo(w0+(m.step||2.5),m.step,m.min))+' кг';
 }
-/* Сколько недель лучший e1RM не двигается */
+/* Сколько недель результат не двигается.
+   Мерка та же, что у рекорда, — среднее по рабочим подходам (exScore).
+   Раньше здесь был лучший ОДИН подход, и две части приложения спорили
+   на одной карточке: 97,5×8-8-8 после 95×8-8-9 — рекорд по среднему,
+   но 97,5×8 и 95×9 по Эпли дают одно и то же число, и та же карточка
+   показывала «встало». Ровные подходы на новом весе — это рост. */
 function plateau(exId){
   var m=EX[exId];if(!m||!hasE1(m))return 0;
   var by={};
   S.log.forEach(function(x){
     if(isDl(x))return;
     var e=x.e[exId];if(!e||!e.length)return;
-    var wk=weekKey(x.s),b=0;
-    e.forEach(function(s){var q=e1rm(s.w,s.r,m);if(q>b)b=q;});
+    var wk=weekKey(x.s),b=exScore(e,m);
     if(b&&(!by[wk]||b>by[wk]))by[wk]=b;
   });
   var ks=Object.keys(by).map(Number).sort(function(a,b){return a-b;});
