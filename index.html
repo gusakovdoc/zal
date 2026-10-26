@@ -2517,20 +2517,26 @@ function groupWeek(wk){
   return g;
 }
 /* Индекс силы: среднее по упражнениям отношение текущего лучшего e1RM к первому. 100 = старт */
+/* Индекс силы — НЫНЕШНЯЯ сила, а не лучшая за всё время. По каждому
+   упражнению берётся последняя тренировка относительно первой, поэтому
+   пропуск или слабый день опускают линию: лучший результат в истории
+   никуда не девается, и индекс по нему мог только расти. Мерка та же,
+   что у рекорда и застоя, — среднее по рабочим подходам (exScore). */
 function strengthIndex(){
-  var base={},pts=[],best={};
+  var base={},pts=[],cur={};
   S.log.forEach(function(sess){
     if(isDl(sess))return;
+    var touched=false;
     Object.keys(sess.e).forEach(function(k){
       var m=EX[k];if(!m||!IDX_EX[k])return;
-      var b=0;sess.e[k].forEach(function(s){var q=setScore(s.w,s.r,m);if(q>b)b=q;});
-      if(!b)return;
-      if(!base[k])base[k]=b;
-      if(!best[k]||b>best[k])best[k]=b;
+      var q=exScore(sess.e[k],m);
+      if(!q)return;
+      if(!base[k])base[k]=q;
+      cur[k]=q;touched=true;
     });
-    var ks=Object.keys(best);
-    if(!ks.length)return;
-    var sum=0;ks.forEach(function(k){sum+=best[k]/base[k];});
+    if(!touched)return;
+    var ks=Object.keys(cur),sum=0;
+    ks.forEach(function(k){sum+=cur[k]/base[k];});
     pts.push({x:dstr(sess.s),y:Math.round(sum/ks.length*1000)/10});
   });
   return pts;
@@ -2697,7 +2703,7 @@ function renderStat(){
   var st=streak();
 
   var si=strengthIndex();
-  h+='<h4>Индекс силы</h4><p class="sub">Средний рост по всем упражнениям зала и домашнего «Приоритета». 100 — твой старт. Растёт только когда растут веса и повторы, объём сам по себе его не двигает.</p>';
+  h+='<h4>Индекс силы</h4><p class="sub">Нынешняя сила по всем упражнениям зала и домашнего «Приоритета»: по каждому — последняя тренировка относительно первой. 100 — твой старт. Слабая тренировка или пропуск опускают линию, объём сам по себе её не двигает.</p>';
   h+='<div class="chart">'+lineChart(si,'#55BC8A','')+'</div>';
 
   var TP=planFor(tw);
