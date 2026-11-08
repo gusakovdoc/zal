@@ -1141,28 +1141,41 @@ function progHint(item,m,sArr,nSets){
   if(!ok)return '';
   return 'Все подходы на верхней границе: в следующий раз '+fmtW(w0)+' → '+fmtW(roundTo(w0+(m.step||2.5),m.step,m.min))+' кг';
 }
-/* Сколько недель результат не двигается.
-   Мерка та же, что у рекорда, — среднее по рабочим подходам (exScore).
-   Раньше здесь был лучший ОДИН подход, и две части приложения спорили
-   на одной карточке: 97,5×8-8-8 после 95×8-8-9 — рекорд по среднему,
-   но 97,5×8 и 95×9 по Эпли дают одно и то же число, и та же карточка
-   показывала «встало». Ровные подходы на новом весе — это рост. */
-function plateau(exId){
-  var m=EX[exId];if(!m||!hasE1(m))return 0;
-  var by={};
+/* Застой: сколько тренировок подряд нет нового лучшего результата.
+   Мерка и правило те же, что у рекорда, — exScore и isRecord. Раньше рост
+   засчитывался только от +0,5 кг расчётного веса: для жима ногами это
+   0,3%, а для махов и бицепса — 3%, и рекорд на карточке соседствовал
+   с «стоит 5 недель». И сравнивалось с лучшим за всю историю, поэтому
+   после перерыва или осознанного сброса веса «стояло» всё подряд, хотя
+   результат рос от тренировки к тренировке.
+   Теперь: после перерыва от двух недель история начинается заново —
+   возвращение к форме не застой. Лучший берётся за последние 10 недель:
+   старый пик на другом весе не висит вечно. Застой — четыре тренировки
+   подряд без нового лучшего, и прошло не меньше трёх недель: на двух
+   тренировках в неделю четыре подряд — это меньше двух недель, рано. */
+var STALL_GAP=14*864e5,STALL_WIN=70*864e5;
+function plateau(exId,now){
+  var m=EX[exId];if(!m||!hasE1(m))return null;
+  now=now||Date.now();
+  var ss=[];
   S.log.forEach(function(x){
-    if(isDl(x))return;
+    if(isDl(x)||x.s>now)return;
     var e=x.e[exId];if(!e||!e.length)return;
-    var wk=weekKey(x.s),b=exScore(e,m);
-    if(b&&(!by[wk]||b>by[wk]))by[wk]=b;
+    var q=exScore(e,m);if(q)ss.push({t:x.s,q:q});
   });
-  var ks=Object.keys(by).map(Number).sort(function(a,b){return a-b;});
-  if(ks.length<4)return 0;
-  var best=0,since=ks[0];
-  ks.forEach(function(k){if(by[k]>best+0.5){best=by[k];since=k;}});
-  var wks=Math.round((ks[ks.length-1]-since)/6048e5);
-  return wks>=3?wks:0;
+  var st=0;
+  for(var i=1;i<ss.length;i++)if(ss[i].t-ss[i-1].t>=STALL_GAP)st=i;
+  ss=ss.slice(st).filter(function(s){return s.t>=now-STALL_WIN;});
+  if(ss.length<5)return null;
+  var bi=0;
+  ss.forEach(function(s,i){if(isRecord(s.q,ss[bi].q))bi=i;});
+  var n=ss.length-1-bi,wks=Math.round((now-ss[bi].t)/6048e5);
+  return (n>=4&&wks>=3)?{n:n,w:wks}:null;
 }
+/* Предупреждать о застое на сушке незачем: там удержать результат — и есть цель. */
+function stallShown(exId){return isCut()?null:plateau(exId);}
+function trN(n){var a=n%10,b=n%100;
+  return (a===1&&b!==11)?'тренировка':(a>=2&&a<=4&&(b<10||b>=20))?'тренировки':'тренировок';}
 
 /* Календарных дней с последней тренировки, по датам, а не по часам */
 function daysSince(){
@@ -1239,13 +1252,13 @@ function hintsHtml(){
 
   /* 2б. Застой */
   var stuck=[];
-  Object.keys(EX).forEach(function(k){var n=plateau(k);if(n)stuck.push({n:EX[k].name,w:n});});
-  stuck.sort(function(a,b){return b.w-a.w;});
+  Object.keys(EX).forEach(function(k){var p=stallShown(k);if(p)stuck.push({n:EX[k].name,c:p.n,w:p.w});});
+  stuck.sort(function(a,b){return b.c-a.c;});
   if(stuck.length){
     var top3=stuck.slice(0,3);
-    out+=card('stuck',top3.map(function(x){return x.n+x.w;}).join('|'),
-      '<div class="tip todo"><b>Встало: '+top3.map(function(x){return x.n.toLowerCase()+' ('+x.w+' нед)';}).join(', ')+'.</b> '+
-      'Три недели без роста — причина обычно не в тренировке. Проверь сон, добор калорий и не пора ли сменить упражнение.</div>');
+    out+=card('stuck',top3.map(function(x){return x.n+x.c;}).join('|'),
+      '<div class="tip todo"><b>Без роста: '+top3.map(function(x){return x.n.toLowerCase()+' ('+x.c+' '+trN(x.c)+')';}).join(', ')+'.</b> '+
+      'Четыре тренировки подряд без нового лучшего — причина обычно не в тренировке. Проверь сон, еду и не пора ли сменить упражнение.</div>');
   }
 
   /* 3. Пауза */
@@ -1994,8 +2007,8 @@ function renderWork(){
     }
     var ph=dlOn?'':progHint(item,m,sArr,nSets);
     if(ph) out+='<div class="phint">'+ph+'</div>';
-    var pl=dlOn?0:plateau(exId);
-    if(pl&&!ph) out+='<div class="pwarn">Лучший результат стоит '+pl+' нед. Смотри не на подходы, а на сон и добор калорий.</div>';
+    var pl=dlOn?null:stallShown(exId);
+    if(pl&&!ph) out+='<div class="pwarn">Нового лучшего нет '+pl.n+' '+trN(pl.n)+' подряд, '+pl.w+' нед. Обычно дело не в подходах, а во сне и еде. Если и с ними порядок — пора менять схему или упражнение.</div>';
     if(cust.note) out+='<div class="mynote">'+esc(cust.note)+'</div>';
     out+='<div class="sets">';
 
@@ -3183,8 +3196,8 @@ function doAi(){
   });
   L.push('');
   var stuck=[];
-  Object.keys(EX).forEach(function(k){var n=plateau(k);if(n)stuck.push(EX[k].name+' — '+n+' нед');});
-  if(stuck.length){L.push('ЗАСТОЙ (лучший e1RM не растёт)');stuck.forEach(function(s){L.push('  '+s);});L.push('');}
+  Object.keys(EX).forEach(function(k){var p=plateau(k);if(p)stuck.push(EX[k].name+' — '+p.n+' трен. подряд, '+p.w+' нед');});
+  if(stuck.length){L.push('ЗАСТОЙ (нет нового лучшего по среднему за подходы)');stuck.forEach(function(s){L.push('  '+s);});L.push('');}
 
   L.push('НЕДЕЛИ (статус: g=по плану, y=пропущено дома, r=пропущен зал)');
   var seen={};
