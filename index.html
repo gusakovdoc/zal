@@ -728,11 +728,11 @@ var BODY=[
 {k:'ch',n:'Грудь',u:'см',s:.5,h:'по сосковой линии, на выдохе, руки опущены'},
 {k:'k1',n:'Калипер, бок',u:'мм',s:.5,h:'2 см выше подвздошной справа'},
 {k:'k2',n:'Калипер, живот',u:'мм',s:.5,h:'2 см слева от пупка'},
-{k:'st',n:'Шаги в день',u:'шт',s:500,h:'среднее за неделю из часов — падел вычтется автоматически'},
-{k:'kc',n:'Съедено, ккал в день',u:'ккал',s:50,h:'среднее за неделю из FatSecret — по нему считается реальный расход'},
-{k:'cb',n:'Углеводы за неделю',u:'г',s:50,h:'сумма за все семь дней, не среднее'},
-{k:'ft',n:'Жиры за неделю',u:'г',s:20,h:'сумма за все семь дней'},
-{k:'pr',n:'Белки за неделю',u:'г',s:50,h:'сумма за все семь дней'}];
+{k:'st',n:'Шаги в день',u:'шт',s:500,wk:1,h:'среднее за неделю из часов — падел вычтется автоматически'},
+{k:'kc',n:'Съедено, ккал в день',u:'ккал',s:50,wk:1,h:'среднее за неделю из FatSecret — по нему считается реальный расход'},
+{k:'cb',n:'Углеводы за неделю',u:'г',s:50,wk:1,h:'сумма за все семь дней, не среднее'},
+{k:'ft',n:'Жиры за неделю',u:'г',s:20,wk:1,h:'сумма за все семь дней'},
+{k:'pr',n:'Белки за неделю',u:'г',s:50,wk:1,h:'сумма за все семь дней'}];
 
 var FACTS=[
 'Мышцы за две недели без зала практически не теряются. Падает гликоген, вода и рабочие веса на 5–10% — это возвращается за пару тренировок.',
@@ -2187,7 +2187,8 @@ document.addEventListener('click',function(ev){
     if(nv<stp){toast(stp===2?'Минимум по одному подходу на сторону':'Минимум один подход');return;}
     if(nv>12){toast('Больше 12 подходов не нужно');return;}
     S.setsOv[itemId]=nv;save();renderWork();return;}
-  if(a==='bm'){var bi=document.getElementById('b_'+b.dataset.k);bi.value=fmtW(Math.max(0,num(bi.value)+parseFloat(b.dataset.s)));return;}
+  /* пустое недельное поле шагает от прошлого значения из подсказки, а не от нуля */
+  if(a==='bm'){var bi=document.getElementById('b_'+b.dataset.k);bi.value=fmtW(Math.max(0,num(bi.value.trim()!==''?bi.value:bi.placeholder)+parseFloat(b.dataset.s)));return;}
   if(a==='bsave'){saveBody();return;}
   if(a==='bdel'){if(armed&&armed.el===b){var dd=b.dataset.d;disarm();S.body=S.body.filter(function(x){return x.d!==dd;});save();renderBody();toast('Запись удалена');}else arm(b,'Удалить?');return;}
   if(a==='dellast'){
@@ -2663,13 +2664,19 @@ function renderBody(){
   var v=document.getElementById('v-body');
   var sorted=S.body.slice().sort(function(a,b){return a.d<b.d?-1:1;});
   var last=sorted[sorted.length-1];
-  var h='<h4>Новый замер</h4><p class="sub">По воскресеньям. Поля подставлены из прошлого раза — меняй только то, что сдвинулось.</p>';
+  var h='<h4>Новый замер</h4><p class="sub">По воскресеньям. Тело подставлено из прошлого раза — меняй только то, что сдвинулось. Шаги и еда каждую неделю новые: серым подсказано прошлое значение.</p>';
   h+='<input type="date" id="bdate" value="'+iso(Date.now())+'">';
+  /* Недельные поля (шаги, ккал, БЖУ) из прошлой недели не подставляем: не
+     обновил — и чужие цифры сохранялись как новые, а nutrition() считала их
+     съеденным. Свои — подставляем, если замер этой недели уже есть и его правят. */
+  var lastThisWk=!!last&&weekKey(new Date(last.d).getTime())===weekKey(Date.now());
   BODY.forEach(function(f){
-    var val=(last&&last[f.k]!==undefined)?fmtW(last[f.k]):'';
+    var has=last&&last[f.k]!==undefined&&last[f.k]!=='';
+    var val=(has&&(!f.wk||lastThisWk))?fmtW(last[f.k]):'';
+    var ph=(has&&f.wk&&!lastThisWk)?' placeholder="'+fmtW(last[f.k])+'"':'';
     h+='<div class="bf"><label>'+f.n+', '+f.u+(f.h?'<em>'+f.h+'</em>':'')+'</label>'+
        '<span class="fld"><button data-a="bm" data-k="'+f.k+'" data-s="-'+f.s+'">−</button>'+
-       '<input type="text" inputmode="decimal" id="b_'+f.k+'" value="'+val+'">'+
+       '<input type="text" inputmode="decimal" id="b_'+f.k+'" value="'+val+'"'+ph+'>'+
        '<button data-a="bm" data-k="'+f.k+'" data-s="'+f.s+'">+</button></span></div>';
   });
   h+='<button class="big go gap" data-a="bsave">Сохранить замер</button>';
@@ -2680,7 +2687,7 @@ function renderBody(){
       var dw=a.w-b0.w,wk=Math.max(1,Math.round((new Date(a.d)-new Date(b0.d))/6048e5)),per=Math.round(dw/wk*100)/100;
       h+='<h4>Динамика веса</h4><div class="kpis">'+
         '<div class="kpi hl"><b>'+(dw>=0?'+':'')+fmtW(dw)+'</b><span>кг за '+wk+' нед</span></div>'+
-        '<div class="kpi"><b>'+(per>=0?'+':'')+fmtW(per)+'</b><span>кг в неделю<br>цель: +0,2</span></div>'+
+        '<div class="kpi"><b>'+(per>=0?'+':'')+fmtW(per)+'</b><span>кг в неделю<br>цель: '+(isCut()?'−0,4':'+0,2')+'</span></div>'+
         '<div class="kpi"><b>'+sorted.length+'</b><span>замеров</span></div></div>';
     }
     h+='<h4>График</h4><select id="bsel">';
