@@ -987,8 +987,14 @@ function bodyIn(wk,key){
 var GAIN={
  easy:{s:200,fast:0.30,slow:0.12,n:'Осторожный',d:'минимум жира, набор медленный'},
  norm:{s:320,fast:0.40,slow:0.15,n:'Обычный',    d:'цель около +0,25 кг в неделю'},
- hard:{s:520,fast:0.60,slow:0.25,n:'С запасом',  d:'набор идёт тяжело — держим избыток заведомо выше нужного'}
+ hard:{s:520,fast:0.60,slow:0.25,n:'С запасом',  d:'набор идёт тяжело — держим избыток заведомо выше нужного'},
+ /* Сушка — тот же расчёт с обратным знаком. Темп держим около 0,5% веса в
+    неделю: быстрее вместе с жиром уходят мышцы и сила, медленнее — сушка
+    растягивается на месяцы и выматывает сильнее, чем сам дефицит.
+    fast/slow здесь — границы ПОТЕРИ: быстрее fast тормозим, медленнее slow поджимаем. */
+ cut: {s:-500,fast:-0.80,slow:-0.25,cut:true,n:'Сушка',d:'минус 0,3–0,7 кг в неделю, сила держится'}
 };
+function isCut(){return !!(GAIN[S.gain]&&GAIN[S.gain].cut);}
 var HGT=180,AGE=35,KCAL_PER_KG=7700;
 function bmr(w){return Math.round(10*w+6.25*HGT-5*AGE+5);}
 function nutrition(wk){
@@ -1026,7 +1032,15 @@ function nutrition(wk){
   var tdeeReal=(eaten!==null&&rate!==null)?Math.round(eaten-rate*KCAL_PER_KG/7):null;
   var G=GAIN[S.gain]||GAIN.hard;
   var surplus=G.s,why=G.d;
-  if(rate!==null){
+  if(G.cut){
+    if(rate!==null){
+      if(rate<G.fast){surplus=Math.round(G.s*0.6);why='вес уходит быстрее '+fmtW(-G.fast)+' кг в неделю — с такой скоростью уходят и мышцы, дефицит меньше';}
+      else if(rate>G.slow*0.4){surplus=Math.round(G.s*1.3);why='вес почти стоит — дефицита не хватает, поджимаем';}
+      else if(rate>G.slow){surplus=Math.round(G.s*1.15);why='вес уходит медленнее цели — дефицит чуть больше';}
+      else why='темп в коридоре, дефицит держим';
+    }
+  }
+  else if(rate!==null){
     if(rate>G.fast){surplus=Math.round(G.s*0.55);why='вес растёт быстрее '+fmtW(G.fast)+' кг в неделю — даже с запасом это уже много, срезаем';}
     else if(rate<G.slow*0.4){surplus=Math.round(G.s*1.5);why='вес практически стоит — избытка не хватает, добавляем ощутимо';}
     else if(rate<G.slow){surplus=Math.round(G.s*1.25);why='темп ниже целевого — избыток увеличен';}
@@ -1037,7 +1051,9 @@ function nutrition(wk){
      точности весов и дневника. */
   var tdeeUse=(tdeeReal!==null)?tdeeReal:tdee;
   var target=tdeeUse+surplus;
-  var prot=Math.round(1.8*w),fat=Math.round(0.9*w);
+  /* В дефиците белка нужно больше: он сохраняет мышцы, которые организм
+     иначе пустит в топливо. Жиры на сушке — до нижней разумной границы. */
+  var prot=Math.round((G.cut?2.2:1.8)*w),fat=Math.round((G.cut?0.8:0.9)*w);
   var carb=Math.max(0,Math.round((target-prot*4-fat*9)/4));
   return{w:w,bmr:bmr(w),base:base,steps:steps,stepsRaw:stepsRaw,padSteps:padSteps,stepK:stepK,
          train:train,perDay:perDay,tdee:tdee,tdeeReal:tdeeReal,tdeeUse:tdeeUse,eaten:eaten,
@@ -1060,9 +1076,11 @@ function nutriAdvice(N,wk){
   var t=[];
   if(N.eaten!==null&&N.tdeeReal!==null){
     var d=N.target-N.eaten;
-    t.push('Расход посчитан по факту, а не по формуле: ел '+N.eaten+' ккал в день и рос на '+(N.rate>=0?'+':'')+fmtW(N.rate)+' кг в неделю — значит удерживает вес '+N.tdeeReal+'. Формула давала '+N.tdee+', разница '+(N.tdeeReal>N.tdee?'+':'')+(N.tdeeReal-N.tdee)+'.');
+    t.push('Расход посчитан по факту, а не по формуле: ел '+N.eaten+' ккал в день и '+(N.rate>=0?'рос на +'+fmtW(N.rate):'терял '+fmtW(-N.rate))+' кг в неделю — значит удерживает вес '+N.tdeeReal+'. Формула давала '+N.tdee+', разница '+(N.tdeeReal>N.tdee?'+':'')+(N.tdeeReal-N.tdee)+'.');
     if(d>80) t.push('До цели не хватает '+d+' ккал в день. Проще всего добрать углеводами: '+Math.round(d/4)+' г — это примерно '+fmtW(Math.round(d/4/0.75)/10*10)+' г риса или овсянки в сухом виде.');
-    else if(d<-80) t.push('Ешь на '+Math.abs(d)+' ккал больше цели. Если талия при этом не растёт — не трогай, значит расход выше расчётного.');
+    else if(d<-80) t.push(isCut()
+      ?'Ешь на '+Math.abs(d)+' ккал больше цели — дефицита так нет. Срезай в первую очередь жирное и сладкое с жиром, а не белок и не углеводы вокруг тренировки.'
+      :'Ешь на '+Math.abs(d)+' ккал больше цели. Если талия при этом не растёт — не трогай, значит расход выше расчётного.');
     else t.push('Съедаемое совпадает с целью — так и держи.');
   }else if(N.eaten!==null){
     t.push('Съедаемое известно ('+N.eaten+' ккал), но нужен ещё один замер веса, чтобы посчитать реальный расход. После него цифра перестанет быть оценкой.');
@@ -1071,7 +1089,9 @@ function nutriAdvice(N,wk){
   }
   if(!N.stepsRaw) t.push('Шаги за эту неделю не заполнены, поэтому расчётный расход занижен. Впиши среднее из часов во вкладке «Тело».');
   if(N.rate===null) t.push('Нужно хотя бы два воскресных замера веса, чтобы поймать темп. Пока держу избыток по умолчанию.');
-  else t.push('Фактический темп: '+(N.rate>=0?'+':'')+fmtW(N.rate)+' кг в неделю, по '+N.weighIns+' замерам за '+fmtW(N.rateWks)+' нед. Режим «'+(GAIN[S.gain]||GAIN.hard).n+'»: тревога начинается выше '+fmtW((GAIN[S.gain]||GAIN.hard).fast)+' кг в неделю.');
+  else t.push('Фактический темп: '+(N.rate>=0?'+':'')+fmtW(N.rate)+' кг в неделю, по '+N.weighIns+' замерам за '+fmtW(N.rateWks)+' нед. Режим «'+(GAIN[S.gain]||GAIN.hard).n+'»: '+
+    (isCut()?'медленнее '+fmtW(-GAIN.cut.slow)+' кг в неделю дефицит поджимается, быстрее '+fmtW(-GAIN.cut.fast)+' — ослабляется. Темп считается по пяти последним замерам, поэтому первые недели сушки он ещё помнит прошлый набор.'
+            :'тревога начинается выше '+fmtW((GAIN[S.gain]||GAIN.hard).fast)+' кг в неделю.'));
 
   var wa1=bodyAt(wk,'wa'),wa0=bodyBack(wk,'wa'),bi1=bodyAt(wk,'bi'),bi0=bodyBack(wk,'bi');
   if(wa1&&wa0&&bi1&&bi0){
@@ -1098,8 +1118,13 @@ function nutriAdvice(N,wk){
     if(mk&&N.eaten&&Math.abs(mk-N.eaten)>N.eaten*0.12)
       t.push('Макросы складываются в '+mk+' ккал в день, а в калориях записано '+N.eaten+'. Расхождение '+Math.abs(mk-N.eaten)+' — где-то потерялся приём или цифры из разных недель.');
   }
-  t.push('Белок '+N.prot+' г — это 1,8 г на кг, выше прироста не даёт. Жиры '+N.fat+' г — нижняя граница, ниже падают гормоны. Остальное углеводами: их проще всего добрать.');
-  if(N.perDay>400) t.push('Тренировочный расход высокий: '+N.perDay+' ккал в день в среднем. В дни падела добирай сверху 300–400 ккал углеводами, иначе набор встанет на месте.');
+  if(isCut()){
+    t.push('Белок '+N.prot+' г — это 2,2 г на кг: в дефиците он держит мышцы. Жиры '+N.fat+' г — нижняя граница, ниже не опускай. Углеводы — остаток, и большую часть ешь до и после зала и падела.');
+    if(N.perDay>400) t.push('Тренировочный расход высокий: '+N.perDay+' ккал в день в среднем. В дни падела ешь на 300 ккал больше остальных дней, за счёт углеводов: в среднем за неделю дефицит останется тем же, а игра не провалится.');
+  }else{
+    t.push('Белок '+N.prot+' г — это 1,8 г на кг, выше прироста не даёт. Жиры '+N.fat+' г — нижняя граница, ниже падают гормоны. Остальное углеводами: их проще всего добрать.');
+    if(N.perDay>400) t.push('Тренировочный расход высокий: '+N.perDay+' ккал в день в среднем. В дни падела добирай сверху 300–400 ккал углеводами, иначе набор встанет на месте.');
+  }
   return t;
 }
 
@@ -1965,7 +1990,7 @@ function renderWork(){
       if(ad.s)bits.push('<span class="n">'+esc(String(ad.s))+'</span> подх.');
       if(ad.r)bits.push('<span class="n">'+esc(String(ad.r))+'</span> повт.');
       out+='<div class="advline"><span class="advtag">CLAUDE</span> '+
-           (bits.length?bits.join(' · ')+'. ':'')+esc(ad.b||'')+'</div>';
+           (bits.length?bits.join(' · ')+' — ':'')+esc(ad.b||'')+'</div>';
     }
     var ph=dlOn?'':progHint(item,m,sArr,nSets);
     if(ph) out+='<div class="phint">'+ph+'</div>';
@@ -2814,7 +2839,7 @@ function renderStat(){
   h+='<h4>Питание</h4><p class="sub">Норма на день для недели с '+dstr(nWk)+'. Считается от твоего веса, шагов и реального расхода на тренировки.'+
      (hasFact?' Мелким шрифтом — что вышло по факту за эту неделю и насколько это разошлось с планом.':'')+'</p>';
   h+='<div class="wbox"><div style="text-align:center;margin-bottom:12px">'+
-     '<span class="tgtbig">'+N.target+'</span><div style="font-size:13px;color:var(--mut)">ккал в день, чтобы набирать</div>'+
+     '<span class="tgtbig">'+N.target+'</span><div style="font-size:13px;color:var(--mut)">ккал в день, чтобы '+(isCut()?'сушиться':'набирать')+'</div>'+
      (hasFact?'<div class="tgtfact">'+(fKc===null?'<i class="fnof">калории за неделю не записаны</i>'
         :'по факту <i class="'+(Math.abs(fKc-N.target)>N.target*0.1?'foff':'fhit')+'">'+fKc+
           ' · '+(fKc-N.target>0?'+':'')+(fKc-N.target)+'</i>')+'</div>':'')+'</div>'+
@@ -2822,7 +2847,7 @@ function renderStat(){
      '<div><b>'+N.fat+'</b><span>жиры, г</span>'+fct(N.fat,fFt)+'</div>'+
      '<div><b>'+N.carb+'</b><span>углеводы, г</span>'+fct(N.carb,fCb)+'</div></div></div>';
   var nb='<div class="wbox">';
-  nb+='<label class="mlab">Режим набора</label><select id="gsel">';
+  nb+='<label class="mlab">Режим питания</label><select id="gsel">';
   Object.keys(GAIN).forEach(function(k){
     nb+='<option value="'+k+'"'+(S.gain===k?' selected':'')+'>'+GAIN[k].n+' — '+GAIN[k].d+'</option>';
   });
@@ -2833,14 +2858,15 @@ function renderStat(){
       '<div class="kv"><span>Тренировки · '+N.train+' ккал за неделю</span><b>+'+N.perDay+'</b></div>'+
       '<div class="kv'+(N.tdeeReal===null?' tot':'')+'"><span>Расход по формуле</span><b>'+N.tdee+'</b></div>';
   if(N.tdeeReal!==null){
-    nb+='<div class="kv"><span>Ел по факту · '+N.eaten+' ккал, рос '+(N.rate>=0?'+':'')+fmtW(N.rate)+' кг/нед</span><b>'+N.eaten+'</b></div>'+
+    nb+='<div class="kv"><span>Ел по факту · '+N.eaten+' ккал, '+(N.rate>=0?'рос +'+fmtW(N.rate):'терял '+fmtW(-N.rate))+' кг/нед</span><b>'+N.eaten+'</b></div>'+
         '<div class="kv tot"><span>Расход по факту — его и берём</span><b>'+N.tdeeReal+'</b></div>';
   }
-  nb+='<div class="kv"><span>Избыток на набор</span><b>+'+N.surplus+'</b></div>';
+  nb+=N.surplus<0?'<div class="kv"><span>Дефицит на сушку</span><b>'+N.surplus+'</b></div>'
+                 :'<div class="kv"><span>Избыток на набор</span><b>+'+N.surplus+'</b></div>';
   nb+='<p class="note-s">'+N.why.charAt(0).toUpperCase()+N.why.slice(1)+'.</p>';
   nutriAdvice(N,nWk).forEach(function(t){nb+='<p class="note-s">— '+t+'</p>';});
   nb+='</div>';
-  h+=sec('nut','Как посчитано','расход '+N.tdeeUse+(N.tdeeReal!==null?' по факту':'')+' + запас '+N.surplus,nb);
+  h+=sec('nut','Как посчитано','расход '+N.tdeeUse+(N.tdeeReal!==null?' по факту':'')+(N.surplus<0?' − дефицит '+(-N.surplus):' + запас '+N.surplus),nb);
 
   /* группы */
   var gN=groupWeek(tw),gP=groupWeek(pw);
@@ -3166,7 +3192,7 @@ function doAi(){
   });
   L.push('');
   var Nn=nutrition(weekKey(Date.now()));
-  L.push('ПИТАНИЕ, расчёт на текущую неделю (режим набора: '+(GAIN[S.gain]||GAIN.hard).n+')');
+  L.push('ПИТАНИЕ, расчёт на текущую неделю (режим: '+(GAIN[S.gain]||GAIN.hard).n+')');
   L.push('  вес '+fmtW(Nn.w)+' кг, шаги '+Nn.steps+'/день');
   L.push('  расход по формуле '+Nn.tdee+' ккал'+
          (Nn.tdeeReal!==null?', по факту '+Nn.tdeeReal+' ккал (ел '+Nn.eaten+', рос '+fmtW(Nn.rate)+' кг/нед)':', факта нет — не заполнено съеденное'));
